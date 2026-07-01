@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>猪の软件库</title>
+<link rel="stylesheet" href="../css/style.css?v=19">
+<style>
+.tbtn.active{background:var(--ac)!important;color:var(--bg)!important}
+.trend-panel{display:none;background:var(--c);border:1px solid var(--ac);border-radius:12px 12px 0 0;padding:16px;position:sticky;bottom:0;z-index:50;max-height:50vh;overflow-y:auto;box-shadow:0 -4px 24px rgba(0,0,0,.5)}
+.trend-panel.show{display:block}
+.trend-close{position:absolute;top:8px;right:12px;background:none;border:none;color:#8b949e;font-size:20px;cursor:pointer;z-index:1}
+.trend-close:hover{color:var(--r)}
+/* Spec bar — RAM freq & Storage speed */
+.spec-bar{display:inline-block;height:4px;border-radius:2px;vertical-align:middle;margin-right:4px;min-width:6px}
+.spec-val{font-size:11px;color:#8b949e}
+.panel{display:none}.panel.active{display:block}
+.sortbar{display:flex;justify-content:center;align-items:center;gap:4px;margin:0 16px 10px;flex-wrap:wrap}
+.sortbar span{font-size:11px;color:var(--t2)}
+.sort-btn{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);color:var(--t2);padding:4px 10px;border-radius:999px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:500;transition:all .15s}
+.sort-btn:hover{background:rgba(255,255,255,.06);color:var(--t)}
+.sort-btn.active{background:rgba(167,139,250,.15);color:var(--ac);border-color:rgba(167,139,250,.3)}
+.tag.msrp-tag{background:rgba(251,191,36,.12)!important;color:var(--go)!important}
+.msrp-price{color:var(--go)!important;font-size:12px!important}
+</style></head><body>
+<div class="hdr"><h1>🐷 猪の软件库</h1><div class="sub">💰 发售参考价 · <span id="reportDate"></span></div></div>
+<div class="sbar"><input type="text" id="search" placeholder="🔍 搜索硬件…" oninput="doSearch()"></div>
+<div class="sortbar"><span>排序：</span><button class="sort-btn active" data-sort="default" onclick="applySort('default')">默认</button><button class="sort-btn" data-sort="price-asc" onclick="applySort('price-asc')">💰↑</button><button class="sort-btn" data-sort="price-desc" onclick="applySort('price-desc')">💰↓</button><button class="sort-btn" data-sort="perf-asc" onclick="applySort('perf-asc')">⚡↑</button><button class="sort-btn" data-sort="perf-desc" onclick="applySort('perf-desc')">⚡↓</button></div>
+<div class="tabs" id="tabs"></div>
+<div class="content"><div id="panels"></div><div class="ftr">数据来源：💰 发售参考价 · 每日 8:00 自动更新</div></div>
+
+<script>
+var DATA=null,SPEC_MAX={RAM:7200,Storage:15000};
+
+fetch('prices.json?t='+new Date().toISOString().split('T')[0]).then(r=>r.json()).then(function(d){
+  DATA=d;document.getElementById('reportDate').textContent=d.date;
+  // Calculate spec max values for bar scaling
+  Object.values(DATA.categories).forEach(function(cat){
+    cat.items.forEach(function(item){
+      var spec=item.spec||'';
+      var m=spec.match(/(\d+)/);
+      if(m){
+        var v=parseInt(m[0]);
+        if(spec.includes('DDR5')||spec.includes('DDR4'))
+          {if(v>SPEC_MAX.RAM)SPEC_MAX.RAM=v}
+        else if(spec.includes('MB/s')||spec.includes('/W'))
+          {var nums=spec.match(/\d+/g);if(nums){var maxSpd=Math.max.apply(null,nums.map(Number));if(maxSpd>SPEC_MAX.Storage)SPEC_MAX.Storage=maxSpd}}
+      }
+    });
+  });
+  buildUI();
+}).catch(function(e){document.getElementById("panels").innerHTML='<div class=empty>加载失败，请刷新页面</div>';console.error(e)});
+
+function specBarHTML(item,catKey){
+  var spec=item.spec||'',bar='';
+  if(catKey==='RAM'){
+    var m=spec.match(/(\d+)/);if(m){var v=parseInt(m[0]),pct=Math.round(v/SPEC_MAX.RAM*100);bar='<span class="spec-bar" style="width:'+Math.max(6,pct/2)+'px;background:linear-gradient(90deg,#3fb950,#89b4fa)"></span>'}
+  }else if(catKey==='Storage'){
+    var nums=spec.match(/\d+/g);if(nums&&nums.length>0){var maxSpd=Math.max.apply(null,nums.map(Number)),pct=Math.round(maxSpd/SPEC_MAX.Storage*100);bar='<span class="spec-bar" style="width:'+Math.max(6,pct/2)+'px;background:linear-gradient(90deg,#f0c060,#cba6f7)"></span>'}
+  }else if(catKey==='CPU'||catKey==='GPU'){
+    var p=parseFloat(spec)||0;bar='<span class="spec-bar" style="width:'+Math.max(6,p/2)+'px;background:linear-gradient(90deg,#89b4fa,#cba6f7)"></span>'
+  }
+  return '<td class="spec">'+bar+'<span class="spec-val">'+spec+'</span></td>';
+}
+
+function buildUI(){
+  var tabs=document.getElementById('tabs'),panels=document.getElementById('panels');
+  var i=0;
+  Object.entries(DATA.categories).forEach(function(e){
+    var key=e[0],cat=e[1];i++;
+    tabs.innerHTML+='<button class="tab'+(i===1?' active':'')+'" data-key="'+key+'" onclick="switchTab(\''+key+'\')">'+cat.icon+' '+cat.name+'</button>';
+    var rows=cat.items.map(function(item){
+      var s=item.diff>=0?'+':'',c=item.diff>=0?'up':'down',ds=item.diff!==0?(s+item.diff_pct+'%'):'—';
+      var msrpBadge='<span class="tag msrp-tag">💰发售</span>';
+      return '<tr data-name="'+item.name+'" data-cat="'+key+'" onclick="openChart(\''+key+'\',\''+item.name+'\')"><td class="nm"><span class="tag">'+item.tag+'</span>'+msrpBadge+' '+item.name+'</td><td class="pr msrp-price">¥'+item.today.toLocaleString()+'</td><td class="diff '+c+'">'+ds+'</td>'+specBarHTML(item,key)+'</tr>';
+    }).join('');
+    panels.innerHTML+='<div class="panel'+(i===1?' active':'')+'" id="panel-'+key+'"><table class="tbl"><thead><tr><th>型号</th><th>今日报价</th><th>涨跌</th><th>规格</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  });
+  document.querySelector('.content').insertAdjacentHTML('beforeend','<div class="trend-panel" id="trendPanel"><button class="trend-close" onclick="closeChart()">✕</button><div id="trendContent"></div></div>');
+}
+
+function switchTab(key){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active',t.dataset.key===key)});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('active',p.id==='panel-'+key)});
+}
+
+function openChart(cat,name){
+  var item=DATA.categories[cat].items.find(function(i){return i.name===name});
+  if(!item)return;
+  var panel=document.getElementById('trendPanel');
+  panel.classList.add('show');panel._cat=cat;panel._name=name;panel._range=panel._range||'7d';
+  drawChart(panel._range);
+}
+
+function closeChart(){document.getElementById('trendPanel').classList.remove('show')}
+
+function drawChart(range){
+  var panel=document.getElementById('trendPanel'),cat=panel._cat,name=panel._name;panel._range=range;
+  var item=DATA.categories[cat].items.find(function(i){return i.name===name});if(!item)return;
+  var history=item.history||[],today=new Date().toISOString().split('T')[0];
+  if(history.length===0)history=[{date:today,price:item.today}];
+  var tc=document.getElementById('trendContent');
+  tc.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px"><span style="font-size:15px;color:#fff">📈 '+name+'</span><div style="display:flex;gap:4px">'+['7d','30d','180d','all'].map(function(r){return '<button class="tbtn'+(r===range?' active':'')+'" onclick="drawChart(\''+r+'\')">'+(r==='7d'?'7天':r==='30d'?'30天':r==='180d'?'半年':'全部')+'</button>'}).join('')+'</div></div><canvas id="trendCanvas" style="width:100%;height:180px;cursor:crosshair"></canvas>';
+  setTimeout(function(){
+    var canvas=document.getElementById('trendCanvas');if(!canvas)return;
+    var ctx=canvas.getContext('2d'),W=tc.clientWidth-16,H=180;canvas.width=W;canvas.height=H;
+    var now=new Date(),cutoff=new Date();
+    if(range==='7d')cutoff.setDate(now.getDate()-7);else if(range==='30d')cutoff.setDate(now.getDate()-30);else if(range==='180d')cutoff.setDate(now.getDate()-180);else cutoff=new Date(0);
+    // Dedup by date: keep only latest entry per day, sort ascending
+    var dedup={};history.forEach(function(h){var d=h.date;if(new Date(d)>=cutoff){dedup[d]=h.price}});
+    var data=Object.keys(dedup).sort().map(function(d){return{date:d,price:dedup[d]}});
+    // Downsample: 180d → 30 points, all → 30 points
+    if(data.length>30&&(range==='180d'||range==='all')){
+      var step=Math.floor(data.length/30),sampled=[];
+      for(var si=0;si<data.length;si+=step){sampled.push(data[si])}
+      if(sampled[sampled.length-1]!==data[data.length-1])sampled.push(data[data.length-1]);
+      data=sampled;
+    }
+    if(data.length<1)data=[{date:today,price:item.today}];
+    // Y-axis: use only THIS product's price range, not all products
+    var prices=data.map(function(d){return d.price});
+    var pMin=Math.min.apply(null,prices),pMax=Math.max.apply(null,prices);
+    var pRng=pMax-pMin||1;
+    // Proportional padding: 12% of range, minimum ¥10 to avoid flat lines
+    var pad=Math.max(pRng*0.12,10);
+    var minP=Math.floor((pMin-pad)/10)*10;  // round down to 10
+    var maxP=Math.ceil((pMax+pad)/10)*10;   // round up to 10
+    if(maxP<=minP)maxP=minP+10;
+    var rng=maxP-minP||1;
+    function x(i){return 12+(i/Math.max(1,data.length-1))*(W-24)}
+    function y(p){return H-15-((p-minP)/rng)*(H-30)}
+    var color=data[data.length-1].price>=data[0].price?'#3fb950':'#f85149';
+    ctx.clearRect(0,0,W,H);
+    // Dynamic grid: 4-5 horizontal lines
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    var gridStep=Math.pow(10,Math.floor(Math.log10(rng))); // nice step: 1,10,100,1000...
+    if(rng/gridStep<4)gridStep/=2;
+    for(var gy=minP+gridStep;gy<maxP;gy+=gridStep){
+      ctx.beginPath();ctx.moveTo(12,y(gy));ctx.lineTo(W-12,y(gy));ctx.stroke()
+    }
+    ctx.beginPath();data.forEach(function(d,i){i===0?ctx.moveTo(x(i),y(d.price)):ctx.lineTo(x(i),y(d.price))});ctx.lineTo(x(data.length-1),H-10);ctx.lineTo(12,H-10);ctx.closePath();ctx.fillStyle=color+'12';ctx.fill();
+    ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.lineJoin='round';data.forEach(function(d,i){i===0?ctx.moveTo(x(i),y(d.price)):ctx.lineTo(x(i),y(d.price))});ctx.stroke();
+    data.forEach(function(d,i){ctx.beginPath();ctx.arc(x(i),y(d.price),3.5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()});
+    ctx.fillStyle='#585b70';ctx.font='10px sans-serif';ctx.fillText('¥'+Math.round(maxP).toLocaleString(),4,18);ctx.fillText('¥'+Math.round(minP).toLocaleString(),4,H-6);
+    var tip=document.createElement('div');tip.style.cssText='position:absolute;display:none;background:#1a1a2e;border:1px solid #30363d;border-radius:8px;padding:8px 12px;font-size:12px;color:#cdd6f4;pointer-events:none;z-index:60;white-space:nowrap';canvas.parentElement.style.position='relative';canvas.parentElement.appendChild(tip);
+    canvas.onmousemove=function(e){var rect=canvas.getBoundingClientRect(),mx=e.clientX-rect.left,idx=Math.round((mx-12)/(W-24)*(data.length-1));idx=Math.max(0,Math.min(data.length-1,idx));var d=data[idx],prev=data[Math.max(0,idx-1)],chg=prev.price?((d.price-prev.price)/prev.price*100).toFixed(1):'0';tip.innerHTML='<b>'+d.date+'</b><br>¥'+d.price.toLocaleString()+' <span style="color:'+(+chg>=0?'#3fb950':'#f85149')+'">'+(+chg>=0?'+':'')+chg+'%</span>';tip.style.display='block';tip.style.left=Math.min(mx+10,W-160)+'px';tip.style.top='4px'};
+    canvas.onmouseleave=function(){tip.style.display='none'};
+  },100);
+}
+
+function doSearch(){var q=document.getElementById('search').value.toLowerCase().trim();document.querySelectorAll('tr[data-name]').forEach(function(r){r.style.display=(!q||r.dataset.name.toLowerCase().indexOf(q)>=0)?'':'none'})}
+var SORT_MODE='default';
+function perfVal(item,catKey){
+  var s=item.spec||'';
+  if(catKey==='CPU'||catKey==='GPU')return parseFloat(s)||0;
+  if(catKey==='RAM'){var m=s.match(/(\d+)/);return m?parseInt(m[0]):0}
+  if(catKey==='Storage'){var n=s.match(/\d+/g);if(!n)return 0;return Math.max.apply(null,n.map(Number))}
+  var m2=s.match(/(\d+)/);return m2?parseInt(m2[0]):0
+}
+function applySort(mode){
+  SORT_MODE=mode;
+  document.querySelectorAll('.sort-btn').forEach(function(b){b.classList.toggle('active',b.dataset.sort===mode)});
+  document.querySelectorAll('.panel').forEach(function(panel){
+    var catKey=panel.id.replace('panel-',''),cat=DATA.categories[catKey];
+    if(!cat)return;
+    var tbody=panel.querySelector('tbody');if(!tbody)return;
+    var rows=Array.from(tbody.querySelectorAll('tr[data-name]'));
+    if(mode==='default'){
+      var om={};cat.items.forEach(function(it,i){om[it.name]=i});
+      rows.sort(function(a,b){return(om[a.dataset.name]||0)-(om[b.dataset.name]||0)})
+    }else if(mode.indexOf('price')===0){
+      rows.sort(function(a,b){
+        var ia=cat.items.find(function(i){return i.name===a.dataset.name}),ib=cat.items.find(function(i){return i.name===b.dataset.name});
+        return mode==='price-asc'?(ia?ia.today:0)-(ib?ib.today:0):(ib?ib.today:0)-(ia?ia.today:0)
+      })
+    }else if(mode.indexOf('perf')===0){
+      rows.sort(function(a,b){
+        var ia=cat.items.find(function(i){return i.name===a.dataset.name}),ib=cat.items.find(function(i){return i.name===b.dataset.name});
+        var va=ia?perfVal(ia,catKey):0,vb=ib?perfVal(ib,catKey):0;
+        return mode==='perf-asc'?va-vb:vb-va
+      })
+    }
+    rows.forEach(function(r){tbody.appendChild(r)})
+  })
+}
+</script>
+</body></html>

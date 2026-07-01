@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>排行榜 · 猪の软件库</title>
+<link rel="stylesheet" href="css/style.css?v=19">
+<style>
+.pos{font-size:20px;font-weight:700;width:40px;text-align:center;flex:0 0 auto}
+.pos.g0{color:var(--go)}.pos.g1{color:#b0b8c0}.pos.g2{color:#c08050}
+.mid{flex:1;margin-left:8px;min-width:0}
+.mid .nm{font-size:14px;color:#fff;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mid .dt{font-size:11px;color:#6c7086;margin-top:1px}
+.sc{font-size:20px;font-weight:700;color:var(--go);flex:0 0 auto}
+.card{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:12px 16px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all .15s}
+.card:hover{border-color:var(--ac)}
+.submit-area{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:16px;margin-top:16px}
+.submit-area h3{font-size:14px;color:#fff;margin-bottom:12px}
+.submit-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.submit-row input{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--b);border-radius:10px;padding:8px 14px;color:var(--t);font-size:14px;outline:none;font-family:inherit}
+.submit-row input:focus{border-color:var(--ac)}
+.btn-go{background:var(--ac);color:var(--bg);border:none;border-radius:10px;padding:8px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s}
+.btn-go:hover{background:#d4b8ff;transform:translateY(-1px)}
+.submit-msg{margin-top:8px;font-size:12px;min-height:18px}
+.submit-msg.ok{color:var(--g)}.submit-msg.err{color:var(--r)}.submit-msg.info{color:var(--a)}
+@media(max-width:640px){.card{padding:10px 12px}.sc{font-size:16px}.submit-row{flex-direction:column}.submit-row input{width:100%}}
+</style></head><body>
+<div class="hdr"><h1>🏆 排行榜</h1><div class="sub">全球玩家成绩 · 实时同步</div></div>
+<div class="content">
+<div class="tabs"><button class="tab active" onclick="switchGame('2048')">🎮 2048</button><button class="tab" onclick="switchGame('snake')">🐍 贪吃蛇</button></div>
+<div id="panel-2048">
+<div class="dch" style="margin:16px 0 10px;display:flex;justify-content:space-between"><span>🌍 全球排行</span><span class="dcsub" id="cnt-2048"></span></div>
+<div id="global-2048"></div>
+<div class="submit-area"><h3>📤 提交成绩</h3>
+<div class="submit-row"><input id="name-2048" placeholder="昵称" maxlength="12"><span style="color:#8b949e;font-size:13px">最高 <b id="best-2048">0</b></span><button class="btn-go" onclick="submitRank('2048')">提交</button></div>
+<div class="submit-msg" id="msg-2048"></div></div>
+<div class="dch" style="margin:16px 0 10px">💻 本地记录</div><div id="local-2048"></div>
+</div>
+<div id="panel-snake" style="display:none">
+<div class="dch" style="margin:16px 0 10px;display:flex;justify-content:space-between"><span>🌍 全球排行</span><span class="dcsub" id="cnt-snake"></span></div>
+<div id="global-snake"></div>
+<div class="submit-area"><h3>📤 提交成绩</h3>
+<div class="submit-row"><input id="name-snake" placeholder="昵称" maxlength="12"><span style="color:#8b949e;font-size:13px">最高 <b id="best-snake">0</b></span><button class="btn-go" onclick="submitRank('snake')">提交</button></div>
+<div class="submit-msg" id="msg-snake"></div></div>
+<div class="dch" style="margin:16px 0 10px">💻 本地记录</div><div id="local-snake"></div>
+</div>
+</div>
+<div class="ftr"><a href="index.html" style="color:#45475a">← 返回首页</a></div>
+<script src="js/rank.js?v=19"></script>
+<script>
+function switchGame(g){
+  document.getElementById('panel-2048').style.display=g==='2048'?'block':'none';
+  document.getElementById('panel-snake').style.display=g==='snake'?'block':'none';
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active',t.textContent.includes(g==='2048'?'2048':'贪吃蛇'))});
+  loadRankData(g);
+}
+loadRankData('2048');loadRankData('snake');
+</script>
+</body></html>

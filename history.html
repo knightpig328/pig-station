@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>价格历史 · 猪の软件库</title>
+<link rel="stylesheet" href="css/style.css?v=19">
+<style>
+.history-card{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:14px 18px;margin-bottom:8px}
+.history-card .hdr-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.history-card .name{font-size:14px;color:#fff;font-weight:600}
+.history-card .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;margin-right:4px;font-weight:500}
+.history-card .tag.zol{background:rgba(74,222,128,.12);color:#4ade80}
+.history-card .tag.msrp{background:rgba(251,191,36,.12);color:#fbbf24}
+.history-card .price-row{display:flex;gap:12px;margin-top:8px;font-size:13px;flex-wrap:wrap}
+.history-card .price-row span{color:var(--t2)}
+.history-card .price-row b{color:#fff}
+.history-card canvas{width:100%;height:60px;margin-top:6px}
+.cat-filter{display:flex;gap:4px;margin:10px 16px;flex-wrap:wrap;justify-content:center}
+.cat-filter button{background:var(--c);border:1px solid var(--b);color:var(--t2);padding:5px 14px;border-radius:999px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s}
+.cat-filter button:hover,.cat-filter button.active{background:rgba(167,139,250,.15);color:var(--ac);border-color:rgba(167,139,250,.3)}
+@media(max-width:640px){.history-card{padding:10px 12px}.price-row{font-size:11px}}
+</style></head><body>
+<div class="hdr"><h1>📊 价格历史存档</h1><div class="sub">每日自动归档 · <span id="updateTime"></span></div></div>
+<div class="cat-filter" id="catFilter"></div>
+<div class="content" id="content"><div class="card" style="text-align:center;padding:40px;color:var(--t2)">加载中...</div></div>
+<div class="ftr"><a href="index.html">← 返回首页</a> · <a href="report/daily.html">日报 →</a></div>
+
+<script>
+var HISTORY=null,CATEGORIES=null;
+fetch('report/price_history.json?t='+Date.now()).then(r=>r.json()).then(function(h){
+  HISTORY=h;document.getElementById('updateTime').textContent=new Date().toLocaleString('zh-CN');
+  fetch('report/prices.json?t='+Date.now()).then(r=>r.json()).then(function(d){CATEGORIES=d.categories;buildUI()});
+});
+
+var ACTIVE_CAT='all';
+
+function buildUI(){
+  // Category filter
+  var cf=document.getElementById('catFilter'),cats=[{key:'all',icon:'📋',name:'全部'}];
+  Object.entries(CATEGORIES).forEach(function(e){cats.push({key:e[0],icon:e[1].icon,name:e[1].name})});
+  cf.innerHTML=cats.map(function(c){return '<button class="'+(c.key===ACTIVE_CAT?'active':'')+'" onclick="filterCat(\''+c.key+'\')">'+c.icon+' '+c.name+'</button>'}).join('');
+  renderCards();
+}
+
+function filterCat(key){ACTIVE_CAT=key;
+  document.querySelectorAll('#catFilter button').forEach(function(b){b.classList.toggle('active',b.textContent.includes(key==='all'?'全部':key))});
+  renderCards();
+}
+
+function renderCards(){
+  var div=document.getElementById('content'),html='';
+  Object.entries(CATEGORIES).forEach(function(e){
+    var catKey=e[0],cat=e[1];
+    if(ACTIVE_CAT!=='all'&&catKey!==ACTIVE_CAT)return;
+    cat.items.forEach(function(item){
+      var name=item.name,hist=HISTORY[name]||{history:[]};
+      var entries=hist.history||[];
+      if(entries.length<2)return;
+      var first=entries[0],last=entries[entries.length-1];
+      var change=last.price-first.price;
+      var changePct=first.price?((change/first.price)*100).toFixed(1):0;
+      var isZol=item.price_type==='zol';
+      var prices=entries.map(function(e){return e.price});
+      var pMin=Math.min.apply(null,prices),pMax=Math.max.apply(null,prices);
+      var rng=pMax-pMin||1;
+      html+='<div class="history-card"><div class="hdr-row"><span class="name"><span class="tag '+(isZol?'zol':'msrp')+'">'+(isZol?'ZOL市价':'💰发售')+'</span>'+name+'</span><span style="font-size:11px;color:var(--t2)">'+entries.length+'条记录</span></div>';
+      html+='<div class="price-row"><span>最新 <b>¥'+last.price.toLocaleString()+'</b></span><span>起始 <b>¥'+first.price.toLocaleString()+'</b></span><span style="color:'+(change>=0?'#4ade80':'#f87171')+'">'+(change>=0?'+':'')+changePct+'%</span></div>';
+      html+='<canvas id="hc-'+name.replace(/[^a-zA-Z0-9]/g,'')+'" style="width:100%;height:60px"></canvas></div>';
+    });
+  });
+  div.innerHTML=html||'<div class="card" style="text-align:center;padding:40px;color:var(--t2)">暂无历史数据（需至少2天运行记录）</div>';
+  
+  // Draw sparklines
+  setTimeout(function(){
+    Object.entries(CATEGORIES).forEach(function(e){
+      e[1].items.forEach(function(item){
+        var cid='hc-'+item.name.replace(/[^a-zA-Z0-9]/g,'');
+        var canvas=document.getElementById(cid);if(!canvas)return;
+        var entries=(HISTORY[item.name]||{history:[]}).history||[];
+        if(entries.length<2)return;
+        var ctx=canvas.getContext('2d'),W=canvas.parentElement.clientWidth-36,H=60;
+        canvas.width=W;canvas.height=H;
+        var prices=entries.map(function(e){return e.price});
+        var pMin=Math.min.apply(null,prices),pMax=Math.max.apply(null,prices);
+        var pad=Math.max((pMax-pMin)*0.1,1),minP=pMin-pad,maxP=pMax+pad,rng=maxP-minP||1;
+        function x(i){return (i/Math.max(1,entries.length-1))*(W-2)+1}
+        function y(p){return H-4-((p-minP)/rng)*(H-8)}
+        var color=entries[entries.length-1].price>=entries[0].price?'#4ade80':'#f87171';
+        ctx.beginPath();ctx.strokeStyle=color+'66';ctx.lineWidth=1.5;
+        entries.forEach(function(e,i){i===0?ctx.moveTo(x(i),y(e.price)):ctx.lineTo(x(i),y(e.price))});
+        ctx.stroke();
+        ctx.beginPath();ctx.arc(x(entries.length-1),y(entries[entries.length-1].price),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+      });
+    });
+  },200);
+}
+</script>
+</body></html>

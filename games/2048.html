@@ -1,0 +1,239 @@
+<!-- 2048 · 伢月时雨 | v15 · 2026-06-30 修复移动端溢出 + 历史成绩 -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,maximum-scale=1.0">
+<title>2048 · 伢月时雨</title>
+<style>
+:root{--bg:#1a1a2e;--bo:#16213e;--ac:#e94560;--go:#f0c060;--tx:#e0e0e0;--t2:#a0a0b0;--r:12px;--s:80px;--g:10px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);font-family:Segoe UI,Microsoft YaHei,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:var(--tx);user-select:none}
+.wrap{display:flex;gap:28px;align-items:flex-start}.main{text-align:center}
+h1{font-size:42px;font-weight:300;letter-spacing:4px;margin-bottom:6px;background:linear-gradient(135deg,#e94560,#f0c060);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:12px;color:var(--t2);margin-bottom:16px;letter-spacing:2px}
+.scores{display:flex;gap:12px;justify-content:center;margin-bottom:14px}
+.sb{background:var(--bo);border-radius:var(--r);padding:10px 20px;min-width:90px}
+.sb .lb{font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:1px}
+.sb .vl{font-size:22px;font-weight:700;color:#fff}.sb.best .vl{color:var(--go)}
+.btns{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+.btn{border:none;border-radius:var(--r);padding:8px 18px;font-size:14px;cursor:pointer;font-family:inherit;letter-spacing:1px;transition:all .15s}
+.btn-go{background:var(--ac);color:#fff}.btn-go:hover{background:#ff5a75;transform:scale(1.03)}
+.btn-ud{background:#333;color:#ccc}.btn-ud:hover{background:#444}
+.bwrap{display:inline-block;background:var(--bo);border-radius:18px;padding:12px;box-shadow:0 8px 32px rgba(0,0,0,.4);max-width:95vw}
+.board{position:relative;width:calc(var(--s)*4 + var(--g)*3);height:calc(var(--s)*4 + var(--g)*3);max-width:100%;overflow:hidden}
+.bg{position:absolute;width:var(--s);height:var(--s);border-radius:var(--r);background:#1a2744}
+.tile{position:absolute;width:var(--s);height:var(--s);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:28px;transition:left .12s,top .12s;z-index:1}
+.tile.spawn{animation:pop .18s ease;z-index:2}
+.tile.merge{animation:merge .2s ease;z-index:3}
+@keyframes pop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15);opacity:1}to{transform:scale(1);opacity:1}}
+@keyframes merge{0%{transform:scale(1)}40%{transform:scale(1.25)}to{transform:scale(1)}}
+.t2{background:#2a3f5f;color:#cdd6f4}.t4{background:#2e4a6e;color:#cdd6f4}
+.t8{background:#e07b4c;color:#fff}.t16{background:#e07b4c;color:#fff}
+.t32{background:#e0673a;color:#fff}.t64{background:#e94560;color:#fff}
+.t128{background:#e8b830;color:#fff;font-size:24px}.t256{background:#e8b830;color:#fff;font-size:24px}
+.t512{background:#e8a020;color:#fff;font-size:24px}.t1024{background:#e8a020;color:#fff;font-size:20px}
+.t2048{background:#f0c060;color:#1a1a2e;font-size:20px}.t4096{background:#c060e0;color:#fff;font-size:18px}
+.t8192{background:#60a0e0;color:#fff;font-size:18px}
+.pop-score{position:absolute;z-index:10;pointer-events:none;font-weight:700;font-size:16px;color:var(--go);animation:popUp .7s ease forwards}
+@keyframes popUp{0%{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-36px)}}
+.side{background:var(--bo);border-radius:16px;padding:18px;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.side h3{font-size:14px;color:var(--ac);margin-bottom:10px;letter-spacing:1px}
+.hlist{max-height:340px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--ac) transparent}
+.hitem{display:flex;justify-content:space-between;padding:6px 8px;border-radius:8px;font-size:13px;margin-bottom:2px}
+.hitem:nth-child(odd){background:rgba(255,255,255,.03)}.hsc{color:var(--go);font-weight:600}.htm{color:var(--t2);font-size:11px}
+.hempty{color:var(--t2);font-size:12px;text-align:center;padding:20px 0}
+.tip{font-size:11px;color:var(--t2);margin-top:18px;letter-spacing:1px}
+@media(max-width:640px){:root{--s:58px;--g:7px}body{padding:12px;align-items:flex-start;overflow-y:auto}h1{font-size:28px;margin-bottom:2px}.sub{font-size:10px;margin-bottom:10px}.wrap{flex-direction:column;align-items:center;gap:16px}.main{width:100%}.scores{gap:8px}.sb{padding:8px 14px;min-width:70px}.sb .vl{font-size:18px}.tile{font-size:20px}.t128,.t256,.t512{font-size:16px}.t1024,.t2048{font-size:14px}.side{min-width:auto;width:100%;max-height:200px}.hlist{max-height:100px}}
+</style></head><body>
+<div class="wrap"><div class="main">
+<h1>２０４８</h1><div class="sub">伢 月 时 雨 · 工 作 区</div>
+<div class="scores"><div class="sb"><div class="lb">分数</div><div class="vl" id="sc">0</div></div><div class="sb best"><div class="lb">最高</div><div class="vl" id="bs">0</div></div></div>
+<div class="btns"><button class="btn btn-go" onclick="R()">↻ 重新开始</button><button class="btn btn-ud" onclick="U()">↩ 撤销</button></div>
+<div class="bwrap"><div class="board" id="bd"></div></div>
+<div class="tip">方向键 / WASD 移动</div></div>
+<div class="side"><h3>📊 历史分数</h3><div class="hlist" id="hl"></div></div></div>
+<script>
+const S=4;
+
+// ── 动态读取 CSS 变量（修复移动端溢出）──
+function _S(){return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s'))||80}
+function _G(){return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--g'))||10}
+function X(r,c){return c*(_S()+_G())}
+function Y(r,c){return r*(_S()+_G())}
+
+let g,nid,sc,bs,hi,ug,us,ui,ov,wn,pr={};
+function I(){g=Array(S).fill().map(()=>Array(S).fill(null));sc=0;ov=!1;wn=!1;nid=1;ug=null;pr={};A();A();D(1);RH()}
+function A(){let e=[];for(let r=0;r<S;r++)for(let c=0;c<S;c++)if(!g[r][c])e.push({r,c});if(!e.length)return;let{r,c}=e[Math.random()*e.length|0],id=nid++;g[r][c]={id,v:Math.random()<.9?2:4,n:1};pr[id]={r,c}}
+function SU(){ug=g.map(r=>r.map(c=>c?{id:c.id,v:c.v}:null));us=sc;ui=nid}
+function U(){if(!ug||ov)return;g=ug.map(r=>r.map(c=>c?{id:c.id,v:c.v,n:0}:null));sc=us;nid=ui;ug=null;ov=!1;wn=!1;pr={};for(let r=0;r<S;r++)for(let c=0;c<S;c++)if(g[r][c])pr[g[r][c].id]={r,c};D(1);RH()}
+function SL(a){let v=a.filter(x=>x!==null).map(x=>({id:x.id,v:x.v})),m=Array(v.length).fill(!1),p=0;for(let i=0;i<v.length-1;i++)if(v[i].v===v[i+1].v&&!m[i]&&!m[i+1]){v[i]={id:v[i+1].id,v:v[i].v*2,m:1};p+=v[i].v;v.splice(i+1,1);m[i]=!0}while(v.length<S)v.push(null);return{r:v,p}}
+function GS(g){return g.map(r=>r.map(c=>c?c.id+':'+c.v:'_').join(',')).join('|')}
+
+// ── 游戏结束检测 ──
+function isGameOver(){
+  for(let r=0;r<S;r++)for(let c=0;c<S;c++)if(!g[r][c])return !1;
+  for(let r=0;r<S;r++)for(let c=0;c<S;c++){
+    let v=g[r][c].v;
+    if(c<S-1&&g[r][c+1]&&g[r][c+1].v===v)return !1;
+    if(r<S-1&&g[r+1][c]&&g[r+1][c].v===v)return !1;
+  }
+  return !0;
+}
+
+function CK(){
+  for(let r=0;r<S;r++)for(let c=0;c<S;c++){
+    if(g[r][c]&&g[r][c].v===2048&&!wn){wn=!0;SH();RH()}
+  }
+  if(isGameOver()){
+    ov=!0;SH();RH();
+    setTimeout(function(){
+      var ovl=document.createElement('div');
+      ovl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:16px';
+      ovl.innerHTML='<div style="font-size:32px;color:#f0c060">游戏结束</div><div style="font-size:18px;color:#ccc">最终分数：'+sc.toLocaleString()+'</div><button onclick="this.parentElement.remove();R()" style="background:#e94560;border:none;padding:12px 32px;border-radius:12px;color:#fff;font-size:16px;cursor:pointer;font-family:inherit">↻ 再来一局</button>';
+      ovl.addEventListener('click',function(e){if(e.target===this){this.remove();R()}});
+      document.body.appendChild(ovl);
+    },200);
+  }
+}
+
+function M(dr,dc){if(ov)return;let os=GS(g);SU();let p=0,ng=Array(S).fill().map(()=>Array(S).fill(null));if(dr){for(let c=0;c<S;c++){let cl=[];for(let r=0;r<S;r++)cl.push(g[r][c]);if(dr===1)cl.reverse();let{r:rs,p:ps}=SL(cl);p+=ps;if(dr===1)rs.reverse();for(let r=0;r<S;r++){if(rs[r])rs[r].n=0;ng[r][c]=rs[r]}}}else{for(let r=0;r<S;r++){let rw=[...g[r]];if(dc===1)rw.reverse();let{r:rs,p:ps}=SL(rw);p+=ps;if(dc===1)rs.reverse();for(let c=0;c<S;c++){if(rs[c])rs[c].n=0;ng[r][c]=rs[c]}}}if(GS(ng)===os){ug=null;return}let op={};for(let r=0;r<S;r++)for(let c=0;c<S;c++)if(g[r][c])op[g[r][c].id]={r,c};sc+=p;g=ng;let ms=new Set();for(let r=0;r<S;r++)for(let c=0;c<S;c++)if(g[r][c]&&g[r][c].m)ms.add(g[r][c].id);A();let np={};for(let r=0;r<S;r++)for(let c=0;c<S;c++)if(g[r][c])np[g[r][c].id]={r,c};D(0,op,np,ms);pr=np;CK();SB()}
+
+function RD(skipAnim){
+  let b=document.getElementById('bd');
+  let sz=_S(), gp=_G();
+
+  // 清除旧背景
+  b.querySelectorAll('.bg').forEach(function(el){el.remove()});
+
+  // 重建背景网格（用当前 CSS 变量尺寸）
+  for(let r=0;r<S;r++)for(let c=0;c<S;c++){
+    let bg=document.createElement('div');
+    bg.className='bg';
+    bg.style.left=(c*(sz+gp))+'px';
+    bg.style.top=(r*(sz+gp))+'px';
+    b.appendChild(bg);
+  }
+
+  // 重建所有方块
+  b.querySelectorAll('.tile').forEach(function(el){el.remove()});
+  let nd={};
+  for(let r=0;r<S;r++)for(let c=0;c<S;c++)if(g[r][c])nd[g[r][c].id]={r,c,v:g[r][c].v,n:g[r][c].n,m:g[r][c].m};
+  for(let[ks,t]of Object.entries(nd)){
+    let id=+ks;
+    let el=document.createElement('div');
+    el.className='tile t'+Math.min(t.v,8192);
+    el.dataset.id=id;
+    el.style.left=(t.c*(sz+gp))+'px';
+    el.style.top=(t.r*(sz+gp))+'px';
+    el.textContent=t.v;
+    b.appendChild(el);
+  }
+}
+
+function D(ini,op,np,ms){
+  document.getElementById('sc').textContent=sc;
+  document.getElementById('bs').textContent=bs;
+  let b=document.getElementById('bd');
+  let sz=_S(), gp=_G();
+
+  if(!b.querySelector('.bg')){
+    for(let r=0;r<S;r++)for(let c=0;c<S;c++){
+      let bg=document.createElement('div');
+      bg.className='bg';
+      bg.style.left=(c*(sz+gp))+'px';
+      bg.style.top=(r*(sz+gp))+'px';
+      b.appendChild(bg);
+    }
+  }
+
+  let nd={};
+  for(let r=0;r<S;r++)for(let c=0;c<S;c++)if(g[r][c])nd[g[r][c].id]={r,c,v:g[r][c].v,n:g[r][c].n,m:g[r][c].m};
+
+  b.querySelectorAll('.tile').forEach(function(el){
+    if(!nd[+el.dataset.id]){el.style.opacity='0';setTimeout(function(){el.remove()},120)}
+  });
+
+  for(let[ks,t]of Object.entries(nd)){
+    let id=+ks,el=b.querySelector('.tile[data-id="'+id+'"]');
+    if(!el){
+      el=document.createElement('div');
+      el.className='tile t'+Math.min(t.v,8192);
+      el.dataset.id=id;
+      el.style.left=(t.c*(sz+gp))+'px';
+      el.style.top=(t.r*(sz+gp))+'px';
+      el.textContent=t.v;
+      if(t.n)el.classList.add('sp');
+      el.addEventListener('animationend',function(){this.classList.remove('sp','mg');this.style.zIndex='1'},{once:!0});
+      b.appendChild(el);
+    }else{
+      el.textContent=t.v;
+      el.className='tile t'+Math.min(t.v,8192);
+      let isM=ms&&ms.has(id);
+      if(isM)el.style.zIndex='3';
+      if(!ini&&op&&op[id]&&np&&np[id]){
+        let ox=op[id].c*(sz+gp),oy=op[id].r*(sz+gp),nx=t.c*(sz+gp),ny=t.r*(sz+gp);
+        if(Math.abs(ox-nx)>.5||Math.abs(oy-ny)>.5){
+          el.style.transition='none';
+          el.style.left=ox+'px';
+          el.style.top=oy+'px';
+          el.offsetHeight;
+          el.style.transition='left .12s,top .12s';
+        }
+        el.style.left=nx+'px';
+        el.style.top=ny+'px';
+      }else{
+        el.style.left=(t.c*(sz+gp))+'px';
+        el.style.top=(t.r*(sz+gp))+'px';
+      }
+      if(isM){
+        el.classList.add('mg');
+        el.addEventListener('animationend',function(){this.classList.remove('mg');this.style.zIndex='1'},{once:!0});
+      }
+    }
+    if(t.n)g[t.r][t.c].n=0;
+    if(t.m)g[t.r][t.c].m=0;
+  }
+
+  if(ms&&ms.size){
+    for(let id of ms){
+      for(let r=0;r<S;r++)for(let c=0;c<S;c++)if(g[r][c]&&g[r][c].id===id){
+        let p=document.createElement('div');
+        p.className='pop-score';
+        p.textContent='+'+g[r][c].v;
+        p.style.left=(c*(sz+gp)+sz/2-20)+'px';
+        p.style.top=(r*(sz+gp)-4)+'px';
+        b.appendChild(p);
+        p.addEventListener('animationend',function(){p.remove()},{once:!0});
+        break;
+      }
+    }
+  }
+}
+
+// ── 窗口缩放时重绘棋盘（保持游戏状态）──
+let _ls=0,_lg=0;
+function onResize(){
+  let s=_S(),g=_G();
+  if(s!==_ls||g!==_lg){_ls=s;_lg=g;RD()}
+}
+window.addEventListener('resize',onResize);
+window.addEventListener('orientationchange',function(){setTimeout(onResize,200)});
+
+function SB(){if(sc>bs){bs=sc;localStorage.setItem('_2048_best',bs)}}
+function SH(){if(!sc)return;let n=new Date();hi.unshift({sc,t:String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'),d:n.toLocaleDateString('zh-CN',{month:'short',day:'numeric'})});if(hi.length>50)hi=hi.slice(0,50);localStorage.setItem('_2048_history',JSON.stringify(hi))}
+
+// ── 历史成绩渲染 ──
+function RH(){
+  let el=document.getElementById('hl');
+  if(!hi||!hi.length){el.innerHTML='<div class="hempty">还没有分数记录</div>';return}
+  el.innerHTML=hi.map(function(h,i){
+    return '<div class="hitem"><span>#'+(i+1)+' · '+h.d+' '+h.t+'</span><span class="hsc">'+h.sc.toLocaleString()+'</span></div>';
+  }).join('');
+}
+
+function R(){document.querySelectorAll('body>div[style*="position:fixed"]').forEach(function(el){el.remove()});document.querySelectorAll('#bd .tile').forEach(function(el){el.remove()});I()}
+document.addEventListener('keydown',function(e){let m={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1],w:[-1,0],W:[-1,0],s:[1,0],S:[1,0],a:[0,-1],A:[0,-1],d:[0,1],D:[0,1]},v=m[e.key];if(v){e.preventDefault();M(v[0],v[1])}});
+let tx=0,ty=0;document.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY});document.addEventListener('touchend',function(e){let dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)>Math.abs(dy))M(0,dx>30?1:dx<-30?-1:0);else M(dy>30?1:dy<-30?-1:0,0)});
+bs=+localStorage.getItem('_2048_best')||0;hi=JSON.parse(localStorage.getItem('_2048_history')||'[]');I();document.getElementById('bs').textContent=bs;RH();
+_ls=_S();_lg=_G();
+</script></body></html>
