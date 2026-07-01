@@ -1,47 +1,536 @@
 {
   "CPU": {
-    "Intel i5-12400F": "65%",
-    "Intel i5-12600KF": "72%",
-    "Intel i5-13400F": "70%",
-    "Intel i5-13600KF": "85%",
-    "Intel i5-14600KF": "90%",
-    "Intel i7-14700KF": "98%",
-    "Intel Ultra 7 265K": "92%",
-    "AMD R5 7500F": "62%",
-    "AMD R7 7800X3D": "95%",
-    "AMD R7 9800X3D": "100% 基准",
-    "AMD R9 9950X3D": "118%"
+    "Intel i3-12100F": {
+      "perf": "48%",
+      "msrp": "",
+      "cores": "四核心",
+      "boost": "4.3GHz",
+      "process": "10纳米",
+      "tdp": "58W"
+    },
+    "Intel i3-12100": {
+      "perf": "46%",
+      "msrp": "",
+      "cores": "四核心",
+      "boost": "4.3GHz",
+      "process": "10纳米",
+      "tdp": "60W"
+    },
+    "Intel i5-12400F": {
+      "perf": "65%",
+      "msrp": "",
+      "cores": "",
+      "boost": "4.4GHz",
+      "process": "10纳米",
+      "tdp": ""
+    },
+    "Intel i5-12490F": {
+      "perf": "67%",
+      "msrp": "",
+      "cores": "六核心",
+      "boost": "4.6GHz",
+      "process": "10纳米",
+      "tdp": "65W"
+    },
+    "Intel i5-12600KF": {
+      "perf": "72%",
+      "msrp": "",
+      "cores": "十核心",
+      "boost": "4.9GHz",
+      "process": "10纳米",
+      "tdp": "125W"
+    },
+    "Intel i7-12700KF": {
+      "perf": "82%",
+      "msrp": "",
+      "cores": "",
+      "boost": "",
+      "process": "",
+      "tdp": ""
+    },
+    "Intel i9-12900KF": {
+      "perf": "89%",
+      "msrp": "",
+      "cores": "",
+      "boost": "",
+      "process": "",
+      "tdp": ""
+    },
+    "Intel i5-13400F": {
+      "perf": "70%",
+      "msrp": "",
+      "cores": "",
+      "boost": "",
+      "process": "",
+      "tdp": ""
+    },
+    "Intel i5-13490F": {
+      "perf": "72%",
+      "msrp": "",
+      "cores": "",
+      "boost": "",
+      "process": "",
+      "tdp": ""
+    },
+    "Intel i5-13600KF": {
+      "perf": "85%",
+      "msrp": "",
+      "cores": "",
+      "boost": "",
+      "process": "",
+      "tdp": ""
+    },
+    "Intel i7-13700KF": {
+      "perf": "95%",
+      "msrp": "410美元",
+      "cores": "16(8P+8E)",
+      "boost": "5.4GHz",
+      "process": "Intel 7 (10nm Enhanced)",
+      "tdp": "125W"
+    },
+    "Intel i9-13900K": {
+      "perf": "102%",
+      "msrp": "",
+      "cores": "",
+      "boost": "",
+      "process": "",
+      "tdp": ""
+    },
+    "Intel i5-14600KF": {
+      "perf": "90%",
+      "msrp": "",
+      "cores": "14核心",
+      "boost": "5.3GHz",
+      "process": "Intel 7（10nm）",
+      "tdp": "125W"
+    },
+    "Intel i7-14700KF": {
+      "perf": "98%",
+      "msrp": "",
+      "cores": "20核心",
+      "boost": "5.6GHz",
+      "process": "Intel 7（10nm）",
+      "tdp": "125W"
+    },
+    "Intel i9-14900K": {
+      "perf": "105%",
+      "msrp": "",
+      "cores": "24核心",
+      "boost": "6GHz",
+      "process": "Intel 7（10nm）",
+      "tdp": "125W"
+    },
+    "Intel Ultra 5 245K": {
+      "perf": "78%",
+      "msrp": "",
+      "cores": "",
+      "boost": "4.7GHz",
+      "process": "",
+      "tdp": ""
+    },
+    "Intel Ultra 7 265K": {
+      "perf": "92%",
+      "msrp": "",
+      "cores": "20核心",
+      "boost": "5.7GHz",
+      "process": "3纳米",
+      "tdp": "125W"
+    },
+    "Intel Ultra 9 285K": {
+      "perf": "108%",
+      "msrp": "",
+      "cores": "24核心",
+      "boost": "5.7GHz",
+      "process": "3纳米",
+      "tdp": "125W"
+    },
+    "AMD R5 7500F": {
+      "perf": "62%",
+      "msrp": "",
+      "cores": "六核心",
+      "boost": "5GHz",
+      "process": "5纳米",
+      "tdp": "65W"
+    },
+    "AMD R5 7600X": {
+      "perf": "72%",
+      "msrp": "299美元",
+      "cores": "6",
+      "boost": "5.3GHz",
+      "process": "TSMC 5nm",
+      "tdp": "105W"
+    },
+    "AMD R7 7700": {
+      "perf": "75%",
+      "msrp": "329美元",
+      "cores": "8",
+      "boost": "5.3GHz",
+      "process": "TSMC 5nm",
+      "tdp": "65W"
+    },
+    "AMD R7 7800X3D": {
+      "perf": "95%",
+      "msrp": "",
+      "cores": "八核心",
+      "boost": "5GHz",
+      "process": "",
+      "tdp": "120W"
+    },
+    "AMD R9 7900X": {
+      "perf": "97%",
+      "msrp": "549美元",
+      "cores": "12",
+      "boost": "5.6GHz",
+      "process": "TSMC 5nm",
+      "tdp": "170W"
+    },
+    "AMD R9 7950X3D": {
+      "perf": "107%",
+      "msrp": "699美元",
+      "cores": "16",
+      "boost": "5.7GHz",
+      "process": "TSMC 5nm",
+      "tdp": "120W"
+    },
+    "AMD R7 8700G": {
+      "perf": "78%",
+      "msrp": "329美元",
+      "cores": "8",
+      "boost": "5.1GHz",
+      "process": "TSMC 4nm",
+      "tdp": "65W"
+    },
+    "AMD R5 9600X": {
+      "perf": "78%",
+      "msrp": "",
+      "cores": "6核心",
+      "boost": "",
+      "process": "4纳米",
+      "tdp": "65W"
+    },
+    "AMD R7 9700X": {
+      "perf": "88%",
+      "msrp": "",
+      "cores": "8核心",
+      "boost": "",
+      "process": "4纳米",
+      "tdp": "65W"
+    },
+    "AMD R7 9800X3D": {
+      "perf": "100%",
+      "msrp": "",
+      "cores": "8核心",
+      "boost": "",
+      "process": "4纳米",
+      "tdp": "120W"
+    },
+    "AMD R9 9950X3D": {
+      "perf": "118%",
+      "msrp": "",
+      "cores": "16核心",
+      "boost": "",
+      "process": "4纳米",
+      "tdp": "200WW"
+    }
   },
   "GPU": {
-    "RTX 4060 8G": "35%",
-    "RTX 4060 Ti 8G": "45%",
-    "RTX 4070 Super 12G": "65%",
-    "RTX 4070 Ti Super 16G": "75%",
-    "RTX 4080 Super 16G": "88%",
-    "RTX 4090D 24G": "125%",
-    "RTX 5070 12G": "68%",
-    "RTX 5070 Ti 16G": "82%",
-    "RTX 5080 16G": "100% 基准",
-    "RTX 5090 32G": "150%",
-    "RX 7800 XT 16G": "52%",
-    "RX 7900 XTX 24G": "85%",
-    "RX 9070 XT 16G": "70%",
-    "Intel Arc B580 12G": "32%"
+    "RTX 4060 8G": {
+      "perf": "35%",
+      "msrp": "2399元",
+      "vram": "8GB",
+      "type": "GDDR6",
+      "bandwidth": "272GB/s"
+    },
+    "RTX 4060 Ti 8G": {
+      "perf": "45%",
+      "msrp": "3199元",
+      "vram": "8GB",
+      "type": "GDDR6",
+      "bandwidth": "288GB/s"
+    },
+    "RTX 4070 12G": {
+      "perf": "58%",
+      "msrp": "4799元",
+      "vram": "12GB",
+      "type": "GDDR6X",
+      "bandwidth": "504GB/s"
+    },
+    "RTX 4070 Super 12G": {
+      "perf": "65%",
+      "msrp": "",
+      "vram": "",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RTX 4070 Ti Super 16G": {
+      "perf": "75%",
+      "msrp": "",
+      "vram": "共享内存容量略显吃力",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RTX 4080 Super 16G": {
+      "perf": "88%",
+      "msrp": "",
+      "vram": "共享内存容量略显吃力",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RTX 4090D 24G": {
+      "perf": "125%",
+      "msrp": "",
+      "vram": "",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RTX 5070 12G": {
+      "perf": "68%",
+      "msrp": "",
+      "vram": "",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RTX 5070 Ti 16G": {
+      "perf": "82%",
+      "msrp": "",
+      "vram": "",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RTX 5080 16G": {
+      "perf": "100%",
+      "msrp": "",
+      "vram": "",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RTX 5090 32G": {
+      "perf": "150%",
+      "msrp": "",
+      "vram": "",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RX 7600 8G": {
+      "perf": "30%",
+      "msrp": "1799元",
+      "vram": "8GB",
+      "type": "GDDR6",
+      "bandwidth": "288GB/s"
+    },
+    "RX 7700 XT 12G": {
+      "perf": "42%",
+      "msrp": "",
+      "vram": "",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RX 7800 XT 16G": {
+      "perf": "52%",
+      "msrp": "",
+      "vram": "",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RX 7900 GRE 16G": {
+      "perf": "60%",
+      "msrp": "3999元",
+      "vram": "16GB",
+      "type": "GDDR6",
+      "bandwidth": "576GB/s"
+    },
+    "RX 7900 XTX 24G": {
+      "perf": "85%",
+      "msrp": "",
+      "vram": "",
+      "type": "",
+      "bandwidth": ""
+    },
+    "RX 9070 XT 16G": {
+      "perf": "70%",
+      "msrp": "",
+      "vram": "共享内存容量",
+      "type": "",
+      "bandwidth": ""
+    },
+    "Intel Arc B580 12G": {
+      "perf": "32%",
+      "msrp": "",
+      "vram": "12GB",
+      "type": "GDDR6",
+      "bandwidth": "456GB/s"
+    }
   },
   "RAM": {
-    "金士顿 Fury 16GB×2": "DDR5-6000",
-    "芝奇 幻锋戟 16GB×2": "DDR5-6400",
-    "海盗船 复仇者 16GB×2": "DDR5-6000",
-    "光威 天策 16GB×2": "DDR5-6000",
-    "金百达 银爵 16GB×2": "DDR5-6000",
-    "宏碁 掠夺者 16GB×2": "DDR5-6800"
+    "金士顿 Fury 16GB×2 DDR5": {
+      "perf": "DDR5-6000",
+      "msrp": ""
+    },
+    "金士顿 Fury 32GB×2 DDR5": {
+      "perf": "DDR5-6000",
+      "msrp": ""
+    },
+    "芝奇 幻锋戟 16GB×2 DDR5": {
+      "perf": "DDR5-6400",
+      "msrp": ""
+    },
+    "芝奇 皇家戟 16GB×2 DDR5": {
+      "perf": "DDR5-6400",
+      "msrp": ""
+    },
+    "海盗船 复仇者 16GB×2 DDR5": {
+      "perf": "DDR5-6000",
+      "msrp": ""
+    },
+    "海盗船 统治者 16GB×2 DDR5": {
+      "perf": "DDR5-7200",
+      "msrp": ""
+    },
+    "光威 天策 16GB×2 DDR5": {
+      "perf": "DDR5-6000",
+      "msrp": ""
+    },
+    "金百达 银爵 16GB×2 DDR5": {
+      "perf": "DDR5-6000",
+      "msrp": ""
+    },
+    "金百达 黑刃 16GB×2 DDR5": {
+      "perf": "DDR5-6400",
+      "msrp": ""
+    },
+    "宏碁 掠夺者 16GB×2 DDR5": {
+      "perf": "DDR5-6800",
+      "msrp": ""
+    },
+    "十铨 Delta 16GB×2 DDR5": {
+      "perf": "DDR5-6000",
+      "msrp": ""
+    },
+    "英睿达 16GB×2 DDR5": {
+      "perf": "DDR5-5600",
+      "msrp": ""
+    },
+    "阿斯加特 女武神 16GB×2 DDR5": {
+      "perf": "DDR5-6400",
+      "msrp": ""
+    },
+    "威刚 XPG 16GB×2 DDR5": {
+      "perf": "DDR5-6000",
+      "msrp": ""
+    }
   },
   "Storage": {
-    "三星 9100 PRO 2TB": "PCIe5 R14800",
-    "三星 990 PRO 2TB": "R7450/W6900",
-    "西数 SN850X 2TB": "R7300/W6600",
-    "致态 TiPro7000 2TB": "R7400/W6700",
-    "梵想 S790 2TB": "R7400/W6700",
-    "希捷 酷狼 8TB": "HDD 250MB/s"
+    "三星 9100 PRO 1TB": {
+      "perf": "R14800/W13400",
+      "msrp": "999元",
+      "read": "14800MB/s",
+      "write": "13400MB/s",
+      "interface": "M.2 PCIe 5.0 x4"
+    },
+    "三星 9100 PRO 2TB": {
+      "perf": "R14800/W13400",
+      "msrp": "1599元",
+      "read": "14800MB/s",
+      "write": "13400MB/s",
+      "interface": "M.2 PCIe 5.0 x4"
+    },
+    "三星 990 PRO 1TB": {
+      "perf": "R7450/W6900",
+      "msrp": "1099元",
+      "read": "7450MB/s",
+      "write": "6900MB/s",
+      "interface": "M.2 PCIe 4.0 x4"
+    },
+    "三星 990 PRO 2TB": {
+      "perf": "R7450/W6900",
+      "msrp": "1799元",
+      "read": "7450MB/s",
+      "write": "6900MB/s",
+      "interface": "M.2 PCIe 4.0 x4"
+    },
+    "三星 990 EVO Plus 2TB": {
+      "perf": "R7250/W6800",
+      "msrp": "1099元",
+      "read": "7250MB/s",
+      "write": "6800MB/s",
+      "interface": "M.2 PCIe 4.0 x4 / PCIe 5.0 x2"
+    },
+    "西数 SN850X 1TB": {
+      "perf": "R7300/W6300",
+      "msrp": "999元",
+      "read": "7300MB/s",
+      "write": "6300MB/s",
+      "interface": "M.2 PCIe 4.0 x4"
+    },
+    "西数 SN850X 2TB": {
+      "perf": "R7300/W6600",
+      "msrp": "1599元",
+      "read": "7300MB/s",
+      "write": "6600MB/s",
+      "interface": "M.2 PCIe 4.0 x4"
+    },
+    "西数 SN770 2TB": {
+      "perf": "R5150/W4850",
+      "msrp": "1199元",
+      "read": "5150MB/s",
+      "write": "4850MB/s",
+      "interface": "M.2 PCIe 4.0 x4"
+    },
+    "致态 TiPro7000 2TB": {
+      "perf": "R7400/W6700",
+      "msrp": "1299元",
+      "read": "7400MB/s",
+      "write": "6700MB/s",
+      "interface": "M.2 PCIe 4.0 x4"
+    },
+    "铠侠 SE10 2TB": {
+      "perf": "R7300/W6400",
+      "msrp": "1199元",
+      "read": "7300MB/s",
+      "write": "6400MB/s",
+      "interface": "M.2 PCIe 4.0 x4"
+    },
+    "梵想 S790 2TB": {
+      "perf": "R7400/W6700",
+      "msrp": "699元",
+      "read": "7400MB/s",
+      "write": "6700MB/s",
+      "interface": "M.2 PCIe 4.0 x4"
+    },
+    "英睿达 T500 2TB": {
+      "perf": "R7400/W7000",
+      "msrp": "1199元",
+      "read": "7400MB/s",
+      "write": "7000MB/s",
+      "interface": "M.2 PCIe 4.0 x4"
+    },
+    "海力士 P41 2TB": {
+      "perf": "R7000/W6500",
+      "msrp": "1599元",
+      "read": "7000MB/s",
+      "write": "6500MB/s",
+      "interface": "M.2 PCIe 4.0 x4"
+    },
+    "三星 870 EVO 2TB": {
+      "perf": "R560/W530",
+      "msrp": "1399元",
+      "read": "560MB/s",
+      "write": "530MB/s",
+      "interface": "SATA 6Gbps"
+    },
+    "希捷 酷狼 8TB": {
+      "perf": "250MB/s HDD",
+      "msrp": "1399元",
+      "read": "250MB/s",
+      "write": "",
+      "interface": "SATA 6Gbps"
+    },
+    "西数 红盘Plus 8TB": {
+      "perf": "215MB/s HDD",
+      "msrp": "1199元",
+      "read": "215MB/s",
+      "write": "",
+      "interface": "SATA 6Gbps"
+    }
   }
 }
