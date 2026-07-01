@@ -1,7 +1,7 @@
 # 🐷 猪の软件库
 
 > PC Hardware Price Tracker & Gaming Hub  
-> `https://knightpig328.github.io/pc-hub/`
+> `https://knightpig328.github.io/pig-station/`
 
 ## 功能
 
@@ -21,7 +21,7 @@
 ## 结构
 
 ```
-pc-hub/
+pig-station/
 ├── index.html          首页
 ├── games/              游戏
 ├── report/             日报
