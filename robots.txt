@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://knightpig328.github.io/pc-hub/sitemap.xml
+Sitemap: https://knightpig328.github.io/pig-station/sitemap.xml

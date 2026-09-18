@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三角洲行动 · 随机战备生成器</title>
+<style>
+  :root{
+    --bg:#0a0d12; --card1:#141a24; --card2:#10151d; --line:#222c3c; --line2:#2d3a4f;
+    --tx:#e8edf4; --mut:#8b96a8; --dim:#5c6b80;
+    --gold:#d9a441; --gold2:#f0c674; --green:#6fbf73; --amber:#e0b154; --red:#e05c5c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--tx);
+    font-family:-apple-system,"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+    font-size:14px; line-height:1.55;
+    background-image:
+      radial-gradient(ellipse 70% 40% at 50% -5%, rgba(30,45,70,.55) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 90% 100%, rgba(40,32,18,.35) 0%, transparent 60%);
+    min-height:100vh; display:flex; flex-direction:column;
+  }
+  .wrap{max-width:1200px;margin:0 auto;padding:0 20px;width:100%}
+
+  /* ── 顶栏 ── */
+  header{
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(13,17,24,.97), rgba(11,14,20,.92));
+    backdrop-filter:blur(10px); position:sticky; top:0; z-index:50;
+  }
+  header::after{content:'';display:block;height:2px;background:linear-gradient(90deg,transparent,rgba(217,164,65,.5),transparent)}
+  .hd{display:flex;align-items:center;gap:14px;padding:15px 0;flex-wrap:wrap}
+  .logo{display:flex;align-items:center;gap:11px}
+  .logo .lg{
+    width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+    background:linear-gradient(145deg,#1e2734,#12171f); border:1px solid var(--line2);
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+  .logo .lg svg{width:21px;height:21px;color:var(--gold)}
+  .logo h1{font-size:17.5px;font-weight:800;letter-spacing:.5px}
+  .logo h1 em{
+    font-style:normal;
+    background:linear-gradient(90deg,#e8b95c,#c8933a);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .badge{font-size:11px;color:var(--mut);border:1px solid var(--line);padding:3px 10px;border-radius:20px;white-space:nowrap;background:rgba(255,255,255,.02)}
+  .hd .sp{flex:1}
+  #genBtn{
+    background:linear-gradient(180deg,#e8b95c,#c8933a); color:#1a1204; border:none;
+    font-size:15px; font-weight:800; padding:12px 28px; border-radius:10px; cursor:pointer;
+    letter-spacing:2.5px; box-shadow:0 3px 18px rgba(217,164,65,.35), inset 0 1px 0 rgba(255,255,255,.35); transition:.18s;
+  }
+  #genBtn:hover{transform:translateY(-1px); box-shadow:0 6px 24px rgba(217,164,65,.5), inset 0 1px 0 rgba(255,255,255,.35)}
+  #genBtn:active{transform:translateY(0) scale(.99)}
+
+  /* ── 档位选择 ── */
+  .tiers{padding:18px 0 2px}
+  .tiers .lbl{font-size:12px;color:var(--mut);margin-bottom:10px;letter-spacing:1.5px}
+  .tiers .lbl::before{content:'▍';color:var(--gold);margin-right:6px}
+  .chiprow{display:flex;gap:10px;flex-wrap:wrap}
+  .chip{
+    border:1px solid var(--line); background:linear-gradient(165deg,#161c27,#11161e); color:var(--mut);
+    padding:9px 16px; border-radius:10px; cursor:pointer; font-size:13px; transition:.18s;
+    display:flex; flex-direction:column; align-items:flex-start; line-height:1.38; min-width:112px;
+    box-shadow:0 1px 4px rgba(0,0,0,.3);
+  }
+  .chip b{color:var(--tx);font-weight:700;font-size:13.5px}
+  .chip small{font-size:10.5px;color:var(--dim);margin-top:2px}
+  .chip:hover{border-color:var(--line2);transform:translateY(-1px)}
+  .chip.on{
+    border-color:var(--gold); background:linear-gradient(165deg,rgba(217,164,65,.16),rgba(217,164,65,.05));
+    box-shadow:0 2px 14px rgba(217,164,65,.25), inset 0 0 0 1px rgba(217,164,65,.25);
+  }
+  .chip.on b{color:var(--gold2)}
+  .chip.on small{color:var(--gold)}
+
+  /* ── 卡片网格 ── */
+  main{flex:1; padding-bottom:225px}
+  .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:15px; padding:20px 0}
+  .card{
+    background:linear-gradient(165deg,var(--card1),var(--card2));
+    border:1px solid var(--line); border-radius:14px;
+    padding:15px 17px 16px; position:relative; transition:.22s; overflow:hidden;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent)}
+  .card:hover{border-color:var(--line2);box-shadow:0 4px 18px rgba(0,0,0,.4);transform:translateY(-1px)}
+  .card.locked{border-color:var(--gold);box-shadow:0 2px 16px rgba(217,164,65,.2), inset 0 0 0 1px rgba(217,164,65,.3)}
+  .card.flash{animation:flash .6s ease}
+  @keyframes flash{0%{background:#26334a}100%{background:linear-gradient(165deg,var(--card1),var(--card2))}}
+  .card .ct{font-size:11.5px;color:var(--mut);letter-spacing:2px;margin-bottom:11px;display:flex;align-items:center;gap:7px}
+  .card .ct svg{width:13px;height:13px;color:var(--dim)}
+  .card .ct::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+  .card .cactions{position:absolute;top:11px;right:11px;display:flex;gap:5px;opacity:0;transition:.18s;z-index:2}
+  .card:hover .cactions{opacity:1}
+  .card .cactions button{
+    width:27px;height:27px;border-radius:8px;border:1px solid var(--line);background:var(--card2);
+    color:var(--mut);cursor:pointer;font-size:13px;line-height:1;display:grid;place-items:center;transition:.15s;
+  }
+  .card .cactions button:hover{color:var(--tx);border-color:var(--line2);background:#1a2230}
+  .card .cactions button.on{color:var(--gold);border-color:var(--gold)}
+  .card .cactions button svg{width:14px;height:14px}
+
+  .slot{grid-column:span 4}
+  .slot.wide{grid-column:span 8}
+
+  /* ── 物品行 ── */
+  .item{display:flex;align-items:center;gap:14px}
+  .item .ic{
+    width:64px;height:64px;flex:none;border-radius:11px;
+    background:radial-gradient(circle at 50% 35%, #1c2534, #0d1219 78%);
+    border:1px solid var(--line2); display:grid;place-items:center; overflow:hidden;
+    box-shadow:inset 0 1px 6px rgba(0,0,0,.5);
+  }
+  .item .ic img{width:56px;height:56px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+  .item .ic svg{width:30px;height:30px;color:var(--dim)}
+  .item .info{flex:1;min-width:0}
+  .item .nm{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .meta{font-size:12px;color:var(--mut);margin-top:3px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .item .price{
+    text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;
+  }
+  .item .price b{
+    font-size:14.5px;font-weight:800;
+    background:linear-gradient(90deg,#f0c674,#d9a441);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .item .price span{display:block;font-size:10.5px;color:var(--dim);margin-top:1px}
+  .tag{font-size:10.5px;padding:1.5px 8px;border-radius:5px;background:#1a2331;color:var(--mut);border:1px solid #29364a}
+  .tag.g1{color:#9ca3af}.tag.g2{color:#4ade80;border-color:#1f4d2c}.tag.g3{color:#60a5fa;border-color:#1e3a5f}
+  .tag.g4{color:#c084fc;border-color:#44276b}.tag.g5{color:#fbbf24;border-color:#5c4413}
+  .tag.dual{color:#f0c674;border-color:#5c4413;background:rgba(217,164,65,.08)}
+
+  /* 弹药（并入主武器卡） */
+  .ammobox{margin-top:11px;border-top:1px dashed var(--line); padding-top:10px; display:flex; gap:9px}
+  .ammo{
+    flex:1;display:flex;align-items:center;gap:9px;background:rgba(13,18,26,.7);
+    border:1px solid #1b2432;border-radius:9px;padding:7px 10px;min-width:0;
+  }
+  .ammo img{width:34px;height:34px;object-fit:contain;flex:none}
+  .ammo .ai{min-width:0;flex:1}
+  .ammo .an{font-size:12.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#c6cfdd}
+  .ammo .am{font-size:11px;color:var(--dim);margin-top:1px;display:flex;gap:6px;align-items:center}
+  .ammo.main{border-color:rgba(217,164,65,.25)}
+  .ammo.sub{opacity:.9}
+
+  /* 改装列表 */
+  .attlist{display:flex;flex-direction:column;gap:8px}
+  .attrow{display:flex;align-items:center;gap:10px;background:rgba(13,18,26,.7);border:1px solid #1b2432;border-radius:9px;padding:6px 11px;transition:.15s}
+  .attrow:hover{border-color:#2a3a52;background:rgba(18,24,34,.9)}
+  .attrow img{width:32px;height:32px;object-fit:contain;flex:none;border-radius:6px;background:radial-gradient(circle at 50% 40%, #1a2230, #0d1219);padding:2px}
+  .attrow .an{flex:1;font-size:12.8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#c6cfdd}
+  .attrow .ap{font-size:12.3px;color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .attrow .ac{font-size:10px;color:var(--dim);border:1px solid #242f40;padding:0 6px;border-radius:4px;white-space:nowrap}
+  .noatt{color:var(--dim);font-size:12.5px;text-align:center;padding:14px 0}
+  .sumline{text-align:right;font-size:12px;color:var(--mut);margin-top:8px}
+  .sumline b{color:var(--gold2)}
+
+  .medlist{display:flex;flex-direction:column;gap:8px}
+  .medrow{display:flex;align-items:center;gap:10px;font-size:13px;padding:6px 11px;background:rgba(13,18,26,.7);border:1px solid #1b2432;border-radius:9px}
+  .medrow img{width:32px;height:32px;object-fit:contain;flex:none}
+  .medrow .mk{font-size:10px;color:var(--dim);border:1px solid #242f40;padding:0 6px;border-radius:4px;flex:none}
+  .medrow .mn{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .medrow .mp{color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:12.3px}
+  .empty-slot{color:var(--dim);font-size:12.5px;text-align:center;padding:18px 0;display:flex;flex-direction:column;align-items:center;gap:7px}
+  .empty-slot svg{width:28px;height:28px;opacity:.35}
+
+  /* ── 底部条 ── */
+  footer{
+    position:fixed;left:0;right:0;bottom:0;z-index:60;
+    background:linear-gradient(180deg, rgba(12,16,22,.97), rgba(10,13,18,.99));
+    border-top:1px solid var(--line); backdrop-filter:blur(12px); padding:13px 0 12px;
+  }
+  footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(217,164,65,.35),transparent)}
+  .foot-in{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .total{display:flex;flex-direction:column;min-width:235px}
+  .total .tl{font-size:11.5px;color:var(--mut);letter-spacing:1.5px}
+  .total .tv{
+    font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.25;
+    background:linear-gradient(90deg,#f5d98b,#d9a441);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .total .tv small{font-size:12px;color:var(--mut);font-weight:400;-webkit-text-fill-color:var(--mut);margin-left:6px}
+  .total .sub{font-size:11.5px;color:var(--dim);margin-top:2px;font-variant-numeric:tabular-nums}
+  .total .sub b{color:var(--mut);font-weight:600}
+  .verdict{flex:1;min-width:290px}
+  .vrow{display:flex;gap:8px;margin-bottom:9px;flex-wrap:wrap}
+  .vtag{font-size:11.5px;padding:3px 11px;border-radius:20px;border:1px solid var(--line);color:var(--dim)}
+  .vtag.ok{color:var(--green);border-color:#245c2c;background:rgba(111,191,115,.09)}
+  .vtag.half{color:var(--amber);border-color:#5c4413;background:rgba(224,177,84,.08)}
+  .vtag.no{color:var(--dim)}
+  .bar{position:relative;height:26px;background:rgba(13,18,26,.9);border-radius:8px;border:1px solid var(--line);overflow:visible}
+  .bar .fill{
+    position:absolute;left:0;top:0;bottom:0;border-radius:7px;
+    background:linear-gradient(90deg,rgba(217,164,65,.6),rgba(217,164,65,.25));
+    transition:width .55s cubic-bezier(.2,.8,.3,1);
+  }
+  .bar .rng{position:absolute;top:0;bottom:0;background:rgba(240,198,116,.25);border-right:1px dashed rgba(240,198,116,.5);transition:all .55s cubic-bezier(.2,.8,.3,1)}
+  .bar .mk{position:absolute;top:0;bottom:0;width:1px;background:#3a4761}
+  .bar .mkl{position:absolute;top:-9px;font-size:9.5px;color:var(--dim);transform:translateX(-50%);white-space:nowrap}
+  .bar .cur{position:absolute;top:-7px;bottom:-7px;width:2px;background:var(--gold);box-shadow:0 0 9px rgba(217,164,65,.85);transition:left .55s cubic-bezier(.2,.8,.3,1)}
+  .bar .cur::after{content:'';position:absolute;top:-4px;left:-3px;width:8px;height:8px;background:var(--gold);border-radius:50%}
+
+  .fbtns{display:flex;gap:10px}
+  .fbtn{
+    background:linear-gradient(165deg,#1a2230,#141a24);border:1px solid var(--line);color:var(--mut);border-radius:9px;
+    padding:10px 16px;font-size:13px;cursor:pointer;transition:.15s;white-space:nowrap;
+  }
+  .fbtn:hover{color:var(--tx);border-color:var(--line2)}
+  .fbtn.primary{background:linear-gradient(180deg,#e8b95c,#c8933a);border:none;color:#1a1204;font-weight:800}
+  .fbtn.primary:hover{filter:brightness(1.06)}
+  .hint{font-size:11px;color:var(--dim);margin-top:8px}
+
+  /* ── 弹窗 ── */
+  .modal{position:fixed;inset:0;background:rgba(4,6,10,.75);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.show{display:flex}
+  .mbox{background:linear-gradient(170deg,#141a24,#0f131a);border:1px solid var(--line2);border-radius:16px;max-width:690px;width:100%;max-height:82vh;overflow:auto;padding:26px 28px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .mbox h2{font-size:16.5px;margin-bottom:15px;color:var(--gold2)}
+  .mbox h3{font-size:13.5px;margin:15px 0 6px;color:var(--tx)}
+  .mbox p,.mbox li{font-size:12.8px;color:var(--mut);line-height:1.8}
+  .mbox ul{padding-left:19px}
+  .mbox .close{margin-top:20px;text-align:right}
+  .mbox .close button{background:var(--card2);border:1px solid var(--line);color:var(--mut);padding:9px 24px;border-radius:9px;cursor:pointer;font-size:13px}
+  .mbox .close button:hover{color:var(--tx)}
+
+  .empty-tip{padding:70px 0;text-align:center;color:var(--dim)}
+  .empty-tip svg{width:46px;height:46px;opacity:.4;margin-bottom:13px}
+
+  @media(max-width:900px){
+    .slot,.slot.wide{grid-column:span 6}
+    .total .tv{font-size:22px}
+  }
+  @media(max-width:620px){
+    .slot,.slot.wide{grid-column:span 12}
+    .foot-in{gap:12px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════ SVG 占位图标库 ════════ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-rifle" viewBox="0 0 24 24"><g fill="currentColor">
+    <rect x="1.2" y="9.4" width="14.6" height="2.7" rx="0.7"/><rect x="15.2" y="10.1" width="7" height="1.3" rx="0.65"/>
+    <rect x="21.6" y="9.7" width="1.6" height="2.1" rx="0.4"/><rect x="3.2" y="8.2" width="5" height="1.2" rx="0.4"/>
+    <path d="M6.4,12.1h2.8l-1,5.7H5.7z"/><path d="M10.9,12.1h2.1l-1.2,3.7h-1.8z"/><path d="M1.6,12.1l-0.9,2.6h2.2l0.8-2.6z"/>
+  </g></symbol>
+  <symbol id="i-ammo" viewBox="0 0 24 24"><g fill="currentColor">
+    <path d="M12,2.4c2.2,1.4,3.1,3.2,3.1,5V13H8.9V7.4C8.9,5.6,9.8,3.8,12,2.4z"/>
+    <rect x="8.4" y="13" width="7.2" height="2" rx="0.5"/><rect x="8.8" y="15.4" width="6.4" height="5.2" rx="0.8"/>
+  </g></symbol>
+  <symbol id="i-mod" viewBox="0 0 24 24"><g fill="currentColor">
+    <path d="M14.6,3a5.4,5.4,0,0,0-4.9,7.6L3.4,16.9a1.9,1.9,0,0,0,0,2.7l1,1a1.9,1.9,0,0,0,2.7,0l6.3-6.3A5.4,5.4,0,0,0,21,9.4a5.4,5.4,0,0,0-0.6-2.4l-3.1,3.1-2.4-2.4,3.1-3.1A5.4,5.4,0,0,0,14.6,3z"/>
+  </g></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8">
+    <circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
+  </g></symbol>
+  <symbol id="i-dice" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7">
+    <rect x="3.6" y="3.6" width="16.8" height="16.8" rx="3.2"/>
+    <circle cx="8.4" cy="8.4" r="1.35" fill="currentColor" stroke="none"/><circle cx="15.6" cy="8.4" r="1.35" fill="currentColor" stroke="none"/>
+    <circle cx="8.4" cy="15.6" r="1.35" fill="currentColor" stroke="none"/><circle cx="15.6" cy="15.6" r="1.35" fill="currentColor" stroke="none"/>
+    <circle cx="12" cy="12" r="1.35" fill="currentColor" stroke="none"/>
+  </g></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><g fill="currentColor">
+    <path d="M12,2.6a4.6,4.6,0,0,0-4.6,4.6v2.5H6.3A1.8,1.8,0,0,0,4.5,11.5v8A1.8,1.8,0,0,0,6.3,21.3H17.7a1.8,1.8,0,0,0,1.8-1.8v-8a1.8,1.8,0,0,0-1.8-1.8H16.6V7.2A4.6,4.6,0,0,0,12,2.6zM9.2,7.2a2.8,2.8,0,0,1,5.6,0v2.5H9.2z"/>
+    <circle cx="12" cy="14.6" r="1.9" fill="#0b0e13"/><rect x="11.1" y="15.4" width="1.8" height="3" rx="0.8" fill="#0b0e13"/>
+  </g></symbol>
+  <symbol id="i-unlock" viewBox="0 0 24 24"><g fill="currentColor">
+    <path d="M12,2.6a4.6,4.6,0,0,0-4.6,4.6h1.8a2.8,2.8,0,0,1,5.6,0v2.5H6.3A1.8,1.8,0,0,0,4.5,11.5v8a1.8,1.8,0,0,0,1.8,1.8H17.7a1.8,1.8,0,0,0,1.8-1.8v-8a1.8,1.8,0,0,0-1.8-1.8h-.1V7.2A4.6,4.6,0,0,0,12,2.6z"/>
+    <circle cx="12" cy="14.6" r="1.9" fill="#0b0e13"/><rect x="11.1" y="15.4" width="1.8" height="3" rx="0.8" fill="#0b0e13"/>
+  </g></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8">
+    <circle cx="12" cy="12" r="9"/><path d="M12 10.6v6" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.2" fill="currentColor" stroke="none"/>
+  </g></symbol>
+</svg>
+
+<!-- ════════ 顶栏 ════════ -->
+<header>
+  <div class="wrap hd">
+    <div class="logo">
+      <div class="lg"><svg><use href="#i-target"/></svg></div>
+      <h1>三角洲行动 · <em>随机战备生成器</em></h1>
+    </div>
+    <span class="badge">价格多时点区间 · 2026-09-18</span>
+    <div class="sp"></div>
+    <button id="genBtn">随机生成战备</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tiers">
+    <div class="lbl">目标档位（高于门槛的实战配置 · 不卡低保）</div>
+    <div class="chiprow" id="chipRow"></div>
+  </div>
+</div>
+
+<!-- ════════ 主区 ════════ -->
+<main class="wrap">
+  <div id="grid" class="grid">
+    <div class="empty-tip" style="grid-column:span 12">
+      <svg><use href="#i-dice"/></svg>
+      <div>选择档位，点击「随机生成战备」开始</div>
+      <div style="font-size:11.5px;margin-top:7px">生成后单件可重掷 / 锁定 · 绝密档有概率刷出双枪 · 弹药支持主副混装</div>
+    </div>
+  </div>
+</main>
+
+<!-- ════════ 底部价值条 ════════ -->
+<footer>
+  <div class="wrap foot-in">
+    <div class="total">
+      <span class="tl">战备价值（装备计入 · 交易行区间）</span>
+      <span class="tv" id="totalVal">—<small>哈夫币</small></span>
+      <span class="sub" id="consumableVal">消耗品（弹药+医疗）不计战备：—</span>
+    </div>
+    <div class="verdict">
+      <div class="vrow" id="verdictRow"></div>
+      <div class="bar" id="valueBar"></div>
+      <div class="hint">价格取交易行多时点区间 · 战备值仅计装备类，弹药药品不计入 · 以游戏内实际显示为准</div>
+    </div>
+    <div class="fbtns">
+      <button class="fbtn primary" id="regenBtn">全部重掷</button>
+      <button class="fbtn" id="copyBtn">复制配置</button>
+      <button class="fbtn" id="infoBtn" title="数据说明"><svg style="width:15px;height:15px;vertical-align:-2px"><use href="#i-info"/></svg></button>
+    </div>
+  </div>
+</footer>
+
+<!-- ════════ 数据说明弹窗 ════════ -->
+<div class="modal" id="infoModal">
+  <div class="mbox">
+    <h2>数据说明与使用须知</h2>
+    <h3>数据来源</h3>
+    <ul>
+      <li><b>价格</b>：交易行多时点聚合区间（3日/7日/30日行情 + 快照），来源 orzice.com（三角洲小涛查），2026-09-18。</li>
+      <li><b>图标</b>：游戏官方图库（playerhub.df.qq.com / orzice.com），本地缓存于 assets/icons/。</li>
+      <li><b>战备门槛</b>：各地图入场战备值要求，来源 orzice.com 卡战备系统（2026-09-18 实时）。</li>
+      <li><b>弹药穿透等级</b>：游戏内 1–5 级体系，按口径收录 92 种弹药。</li>
+    </ul>
+    <h3>数值口径（重要）</h3>
+    <ul>
+      <li><b>价格以区间显示</b>：交易行行情日内波动较大（部分物品早晚差价近一倍），区间覆盖多时点采样，比单一价格更接近实际。</li>
+      <li><b>战备价值 = 装备类区间之和</b>（武器、配件、头盔、护甲、胸挂、背包）。</li>
+      <li><b>弹药与药品不计入战备值</b>（游戏底层机制），消耗品成本单独显示。</li>
+      <li>游戏内「战备值」按系统标价计算，「卡战备」即利用交易行价与标价之差。入场判定以游戏内实际显示为准。</li>
+    </ul>
+    <h3>生成规则</h3>
+    <ul>
+      <li>按档位生成<b>高于门槛的实战配置</b>：机密档 18万–120万、绝密档 90万–300万（200万以上目标自动进入<b>顶配倾向</b>，5级装备顶配可达约 300 万），分段加权。</li>
+      <li>弹药品级与主武器口径自动匹配，<b>携弹量按枪型区分</b>，支持<b>主副混装</b>（主 70% + 副补 30%，副弹等级略低）。</li>
+      <li>改装必含瞄具；配件优先该枪专属（414 件专属映射 + 跨枪通用件库）。</li>
+      <li>医疗标配：CAT止血带 + 止痛类 + 手术类 + 回复类 各一件。</li>
+      <li><b>双枪机制</b>：绝密档约 15% 概率刷出第二把武器（200万以上目标为达成价值，提升至 40%），附基础改装与弹药。</li>
+      <li>装备规则：头/甲 <b>最高 5 级</b>（不用 6 级红品）；不使用金品胸挂（禁交易）；背包排除顶级型号。</li>
+      <li>AWM、M82、复合弓因专用弹药价格未收录，暂不参与随机。</li>
+    </ul>
+    <h3>免责声明</h3>
+    <p>本工具为玩家娱乐向配装参考，非官方工具，与腾讯/琳琅天上无关。数据如有偏差，以游戏内实际显示为准。</p>
+    <div class="close"><button onclick="document.getElementById('infoModal').classList.remove('show')">知道了</button></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+'use strict';
+/* ═══════════ 基础工具 ═══════════ */
+const $ = s => document.querySelector(s);
+const rnd = (a,b) => Math.random()*(b-a)+a;
+const rint = (a,b) => Math.floor(rnd(a,b+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const F = n => Math.round(n).toLocaleString('zh-CN');
+const W = n => {
+  if (n==null) return '—';
+  n = Math.round(n);
+  if (n >= 10000) return (n/10000).toFixed(n>=1000000?0:1).replace(/\.0$/,'') + '万';
+  return F(n);
+};
+/* 价格区间显示 lo-hi */
+const R = (lo, hi) => {
+  if (lo==null) return '—';
+  if (!hi || hi===lo) return W(lo);
+  return W(lo) + ' - ' + W(hi);
+};
+const el = (tag, cls, html) => { const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; };
+const midOf = x => (x.lo + x.hi) / 2;
+
+/* ═══════════ 数据与状态 ═══════════ */
+const ALL = DF_DATA;
+const state = { tierId: 't1', loadout: null, locked: {}, targetV: 0 };
+
+const SLOT_NAMES = {gun:'主武器',attachments:'武器改装',second:'副武器',helmet:'头盔',armor:'护甲',chest:'胸挂',bag:'背包',meds:'医疗物资'};
+
+const EXCLUDED_GUNS = new Set(['AWM狙击步枪','M82狙击步枪','复合弓']);
+const GUN_POOL = ALL.guns.filter(g => !EXCLUDED_GUNS.has(g.n));
+const TYPE_WEIGHT = {'步枪':35,'冲锋枪':22,'精确射手步枪':12,'狙击步枪':10,'轻机枪':8,'霰弹枪':8,'手枪':5};
+
+const AMMO_BY_CAL = {};
+for (const a of ALL.ammo) { (AMMO_BY_CAL[a.c] = AMMO_BY_CAL[a.c] || []).push(a); }
+
+/* 携弹量按枪型（步枪约220发不含弹内 · 精确射手-10~20% · 冲锋枪+10~20% · 手枪已上调） */
+const AMMO_COUNT_BY_TYPE = {
+  '手枪':        [60, 120],
+  '冲锋枪':      [240, 265],
+  '步枪':        [200, 240],
+  '精确射手步枪': [180, 200],
+  '狙击步枪':    [20, 50],
+  '轻机枪':      [240, 360],
+  '霰弹枪':      [20, 50],
+  '特殊武器':    [20, 40],
+};
+
+/* 枪械类型 → 图标占位 */
+const GUN_ICON_SVG = {'步枪':'i-rifle','冲锋枪':'i-rifle','精确射手步枪':'i-rifle','狙击步枪':'i-rifle',
+  '轻机枪':'i-rifle','霰弹枪':'i-rifle','手枪':'i-rifle','特殊武器':'i-rifle'};
+
+/* ═══════════ 档位目标区间 ═══════════ */
+/* [下限, 上限, 权重] —— 分段加权，不卡低保 */
+const TIER_SEGMENTS = {
+  't0': [[50000, 150000, 1.0]],
+  't1': [[180000, 450000, 0.60], [450000, 850000, 0.30], [850000, 1200000, 0.10]],
+  't2': [[220000, 550000, 0.60], [550000, 900000, 0.30], [900000, 1200000, 0.10]],
+  't3': [[900000, 1500000, 0.52], [1500000, 2200000, 0.35], [2200000, 3000000, 0.13]],
+  't4': [[950000, 1550000, 0.52], [1550000, 2250000, 0.35], [2250000, 3000000, 0.13]],
+  't5': [[1000000, 1600000, 0.52], [1600000, 2300000, 0.35], [2300000, 3000000, 0.13]],
+};
+
+function pickTargetV(tierId){
+  const segs = TIER_SEGMENTS[tierId] || TIER_SEGMENTS['t1'];
+  const r = Math.random();
+  let acc = 0;
+  for (const [lo, hi, w] of segs){
+    acc += w;
+    if (r <= acc) return Math.round(rnd(lo, hi));
+  }
+  return segs[0][0];
+}
+
+function tierProfile(){
+  const t = ALL.thresholds.find(x=>x.id===state.tierId);
+  const V = t.value;
+  const normal = V === 0;
+  const T = normal ? rnd(50000, 150000) : state.targetV;
+  const isSecretTier = (t.id==='t3'||t.id==='t4'||t.id==='t5');
+  const premium = T >= 2000000;   // 顶格倾向：200万+ 目标时倾向选贵件（5级装备顶配≈300万）
+  return {
+    tier: t, V, T, normal, premium,
+    winLo: normal ? 0 : Math.max(T*0.8, V),
+    winHi: T*1.2,
+    /* 注意：mid 值（区间中值）用于凑目标，显示为区间 */
+    ratio: {
+      gun:   [0.24, 0.45],
+      att:   premium ? [0.16, 0.28] : [0.10, 0.22],
+      helm:  [0.06, 0.16],
+      armor: [0.12, 0.55],
+      chest: [0.015, 0.05],
+      bag:   [0.02, 0.06],
+    },
+    ammoGrades: normal ? [1,2] : V<=110000 ? [2,3,4] : V<=180000 ? [3,4,5] : [4,5],
+    helmGrades: normal ? [1,2] : V<=110000 ? [2,3,4,5] : V<=180000 ? [3,4,5] : [4,5],
+    armorGrades: normal ? [1,2] : V<=110000 ? [2,3,4,5] : V<=180000 ? [3,4,5] : [4,5],
+    dualChance: isSecretTier ? (premium ? 0.40 : 0.15) : 0,
+    medCap: V<=110000 ? 8000 : V<=180000 ? 16000 : 220000,
+  };
+}
+
+/* ═══════════ 挑选器（区间数据：mid 用于凑值，lo/hi 用于显示） ═══════════ */
+function budget(prof, key){ return rnd(prof.ratio[key][0], prof.ratio[key][1]) * prof.T; }
+
+function pickByPrice(pool, target, lo=0.45, hi=1.9, premium=false){
+  let list = pool.filter(x => midOf(x) >= target*lo && midOf(x) <= target*hi);
+  if (!list.length){
+    list = pool.filter(x => midOf(x) >= target*0.2 && midOf(x) <= target*3);
+    if (!list.length) return null;
+  }
+  if (list.length > 3){
+    let sorted;
+    if (premium){
+      // 顶格模式：只保留接近池最高价的候选（最高价的 80% 以上）
+      const max = Math.max(...list.map(midOf));
+      list = list.filter(x => midOf(x) >= max*0.8);
+      sorted = [...list].sort((a,b)=>midOf(b)-midOf(a));
+    } else {
+      sorted = [...list].sort((a,b)=>Math.abs(midOf(a)-target)-Math.abs(midOf(b)-target));
+    }
+    list = sorted.slice(0, Math.max(premium?2:3, Math.ceil(sorted.length*0.6)));
+  }
+  return pick(list);
+}
+
+function pickGun(prof){
+  const lo = prof.T*prof.ratio.gun[0]*0.55, hi = prof.T*prof.ratio.gun[1]*1.25;
+  let pool = GUN_POOL.filter(g => midOf(g) >= lo && midOf(g) <= hi);
+  if (!pool.length){
+    // 目标远超枪池时：顶格模式取最贵档，否则取目标 55% 以内
+    pool = GUN_POOL.filter(g => midOf(g) <= prof.T*(prof.premium ? 3 : 0.55));
+  }
+  if (!pool.length) pool = GUN_POOL;
+  if (prof.premium && pool.length > 3){
+    const sorted = [...pool].sort((a,b)=>midOf(b)-midOf(a));
+    pool = sorted.slice(0, Math.max(3, Math.ceil(sorted.length*0.5)));
+  }
+  const bag = [];
+  for (const g of pool){ const w = TYPE_WEIGHT[g.t]||5; for(let i=0;i<w;i++) bag.push(g); }
+  return pick(bag);
+}
+
+function pickAttachments(gun, prof, maxN){
+  const target = budget(prof, 'att');
+  const n = maxN || (prof.premium ? rint(4, 6) : rint(3, 5));
+  const usedCats = new Set();
+  const result = [];
+  const tryCats = ['瞄具','枪口','前握把','后握把','枪托','弹匣','枪管','护木','功能性配件'];
+  const hasSpecial = cat => ALL.accessories.some(a => a.c===cat && a.a && a.a.includes(gun.n));
+  const isCore = c => (c==='枪管'||c==='弹匣'||c==='护木');
+  const addCat = cat => {
+    const catPool = ALL.accessories.filter(a => a.c===cat);
+    const special = catPool.filter(a => a.a && a.a.includes(gun.n));
+    const generic = catPool.filter(a => !a.a);
+    let pool;
+    if (isCore(cat)) pool = special;
+    else if (special.length && Math.random() < 0.8) pool = special;
+    else pool = generic.length ? generic : special;
+    if (!pool.length) return false;
+    const cand = pickByPrice(pool, target/n, 0.3, 3.0, prof.premium);
+    if (!cand) return false;
+    result.push({n:cand.n, cat:cand.c, lo:cand.lo, hi:cand.hi, i:cand.i});
+    usedCats.add(cat);
+    return true;
+  };
+  // ① 必带瞄具（倍镜）
+  if (!addCat('瞄具')){
+    const scopePool = ALL.accessories.filter(a => a.c==='瞄具').sort((x,y)=>midOf(x)-midOf(y));
+    if (scopePool.length){
+      const cand = pick(scopePool.slice(0, Math.min(3, scopePool.length)));
+      result.push({n:cand.n, cat:cand.c, lo:cand.lo, hi:cand.hi, i:cand.i});
+      usedCats.add('瞄具');
+    }
+  }
+  // ② 随机补其余部位
+  for (let i=0; i<n*3 && result.length<n; i++){
+    const avail = tryCats.filter(c => !usedCats.has(c));
+    if (!avail.length) break;
+    const spCats = avail.filter(hasSpecial);
+    const availOk = avail.filter(c => !isCore(c) || hasSpecial(c));
+    if (!availOk.length) continue;
+    let cat;
+    if (spCats.length && Math.random() < 0.75) cat = pick(spCats);
+    else cat = pick(availOk);
+    addCat(cat);
+  }
+  return result;
+}
+
+/* 弹药：主70% + 副30% 混装（副弹低1-2级） */
+function pickAmmo(gun, prof, countScale){
+  const cal = gun.c;
+  const any = (AMMO_BY_CAL[cal]||[]);
+  if (!any.length) return null;
+  const pool = any.filter(a => prof.ammoGrades.includes(a.g));
+  let main;
+  if (!pool.length){ main = pick(any); }
+  else {
+    const sorted = [...pool].sort((x,y)=>y.g-x.g);
+    const topG = sorted[0].g;
+    const pref = Math.random()<0.7 ? pool.filter(x=>x.g>=topG-1) : pool;
+    main = pick(pref.length?pref:pool);
+  }
+  let subCandidates = any.filter(a => a.n !== main.n && a.g < main.g && a.g >= main.g-2);
+  if (!subCandidates.length) subCandidates = any.filter(a => a.n !== main.n && midOf(a) < midOf(main)*0.7);
+  const sub = subCandidates.length ? pick(subCandidates) : null;
+  const range = AMMO_COUNT_BY_TYPE[gun.t] || [60, 120];
+  const total = Math.max(20, Math.round(rnd(range[0], range[1]) * (countScale||1) / 10) * 10);
+  const mainCount = Math.round(total*0.7/10)*10;
+  const subCount = sub ? total - mainCount : 0;
+  return {
+    main: {n:main.n, g:main.g, lo:main.lo, hi:main.hi, i:main.i, count: sub ? mainCount : total},
+    sub: sub ? {n:sub.n, g:sub.g, lo:sub.lo, hi:sub.hi, i:sub.i, count: subCount} : null
+  };
+}
+
+function pickWearItem(list, prof, key, grades, winHi){
+  const target = budget(prof, key);
+  const pool = list.filter(x => grades.includes(x.g));
+  const cands = [];
+  for (const x of pool){
+    for (const st of Object.keys(x.pr)){
+      const rng = x.pr[st];
+      if (rng && rng[0] > 0) cands.push({n: x.n, g: x.g, wear: st, lo: rng[0], hi: rng[1], i: x.i});
+    }
+  }
+  if (!cands.length) return null;
+  const cand = pickByPrice(cands, target, 0.6, winHi||2.0, prof.premium);
+  return cand ? {n:cand.n, g:cand.g, wear:cand.wear, lo:cand.lo, hi:cand.hi, i:cand.i} : null;
+}
+
+function pickGear(list, prof, key, maxPrice){
+  const target = budget(prof, key);
+  const pool = list.filter(x => midOf(x) <= maxPrice);
+  const cand = pickByPrice(pool, target, 0.5, 2.4, prof.premium);
+  return cand ? {n:cand.n, lo:cand.lo, hi:cand.hi, i:cand.i} : null;
+}
+
+/* 医疗标配：CAT止血带 + 止痛 + 手术 + 回复 各1 */
+function pickMeds(prof){
+  const meds = ALL.consumables;
+  const cap = prof.medCap;
+  const result = [];
+  const cat = meds.find(m => m.n === 'CAT止血带');
+  if (cat) result.push({n:cat.n, lo:cat.lo, hi:cat.hi, i:cat.i, k:'止血'});
+  for (const k of ['止痛','手术','回复']){
+    let pool = meds.filter(m => m.k===k && midOf(m)<=cap);
+    if (!pool.length) pool = meds.filter(m => m.k===k);
+    if (pool.length){ const m = pick(pool); result.push({n:m.n, lo:m.lo, hi:m.hi, i:m.i, k}); }
+  }
+  return result;
+}
+
+/* 副武器（双枪） */
+const SECOND_TYPE_PREF = {'手枪':40,'冲锋枪':30,'步枪':15,'霰弹枪':10,'轻机枪':3,'精确射手步枪':2};
+function pickSecondGun(prof, mainGun){
+  const lo = midOf(mainGun)*0.25, hi = midOf(mainGun)*0.75;
+  let pool = GUN_POOL.filter(g => g.n !== mainGun.n && midOf(g) >= lo && midOf(g) <= hi);
+  if (pool.length < 5) pool = GUN_POOL.filter(g => g.n !== mainGun.n && midOf(g) <= Math.max(midOf(mainGun), 200000));
+  if (!pool.length) pool = GUN_POOL.filter(g => g.n !== mainGun.n);
+  if (prof.premium && pool.length > 3){
+    const sorted = [...pool].sort((a,b)=>midOf(b)-midOf(a));
+    pool = sorted.slice(0, Math.max(3, Math.ceil(sorted.length*0.5)));
+  }
+  const bag = [];
+  for (const g of pool){ const w = SECOND_TYPE_PREF[g.t]||5; for(let i=0;i<w;i++) bag.push(g); }
+  return pick(bag);
+}
+
+/* ═══════════ 计算（区间） ═══════════ */
+function calcWarRange(l){
+  let lo=0, hi=0;
+  const add = x => { if (x){ lo += x.lo; hi += x.hi; } };
+  add(l.gun);
+  for (const a of (l.attachments||[])) add(a);
+  add(l.second);
+  for (const a of (l.secondAtts||[])) add(a);
+  add(l.helmet); add(l.armor); add(l.chest); add(l.bag);
+  return {lo, hi};
+}
+function warMid(l){ const r = calcWarRange(l); return (r.lo + r.hi)/2; }
+function calcConRange(l){
+  let lo=0, hi=0;
+  const addA = a => { if (a){ lo += a.lo*a.count; hi += a.hi*a.count; } };
+  if (l.ammo){ addA(l.ammo.main); addA(l.ammo.sub); }
+  if (l.secondAmmo){ addA(l.secondAmmo.main); addA(l.secondAmmo.sub); }
+  for (const m of (l.meds||[])){ lo += m.lo; hi += m.hi; }
+  return {lo, hi};
+}
+
+function buildOnce(prof){
+  const gun = pickGun(prof);
+  if (!gun) return null;
+  const attachments = pickAttachments(gun, prof);
+  const ammo = pickAmmo(gun, prof);
+  let second = null, secondAtts = [], secondAmmo = null;
+  if (prof.wantDual){
+    second = pickSecondGun(prof, gun);
+    if (second){
+      secondAtts = pickAttachments(second, prof, prof.premium ? 4 : 2);
+      secondAmmo = pickAmmo(second, prof, 0.4);
+    }
+  }
+  const helmet = pickWearItem(ALL.helmets, prof, 'helm', prof.helmGrades);
+  const armor = pickWearItem(ALL.armors, prof, 'armor', prof.armorGrades, prof.V >= 550000 ? 3.0 : 2.0);
+  const chest = pickGear(ALL.chest, prof, 'chest', prof.T*0.06);
+  const bag = pickGear(ALL.bags, prof, 'bag', prof.T*0.08);
+  const meds = pickMeds(prof);
+  const loadout = {gun, attachments, second, secondAtts, secondAmmo, ammo, helmet, armor, chest, bag, meds};
+  return {loadout, mid: warMid(loadout), prof};
+}
+
+function generateAll(){
+  state.targetV = pickTargetV(state.tierId);
+  const prof = tierProfile();
+  // 双枪判定：每次生成只掷一次骰（避免尝试循环内重复判定放大概率）
+  prof.wantDual = prof.dualChance > 0 && Math.random() < prof.dualChance;
+  if (prof.wantDual) prof.winHi = prof.T * 1.4;   // 双枪配置天然更贵，放宽上限
+  let best = null;
+  for (let i=0; i<500; i++){
+    const r = buildOnce(prof);
+    if (!r) continue;
+    const ok = r.mid >= prof.winLo && r.mid <= prof.winHi;
+    if (ok){ best = r; break; }
+    if (!best || Math.abs(r.mid - prof.T) < Math.abs(best.mid - prof.T)) best = r;
+  }
+  return best ? best.loadout : null;
+}
+
+/* ═══════════ 渲染 ═══════════ */
+function imgTag(i, fallbackSvg){
+  if (i) return `<img src="assets/icons/${i}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='block')"><svg style="display:none"><use href="#${fallbackSvg}"/></svg>`;
+  return `<svg><use href="#${fallbackSvg}"/></svg>`;
+}
+function cardActions(slot){
+  const locked = state.locked[slot];
+  return `<div class="cactions">
+    <button title="重掷此部位" onclick="rerollSlot('${slot}')"><svg><use href="#i-dice"/></svg></button>
+    <button title="${locked?'解锁':'锁定'}" class="${locked?'on':''}" onclick="toggleLock('${slot}')"><svg><use href="#${locked?'i-lock':'i-unlock'}"/></svg></button>
+  </div>`;
+}
+function ammoBlock(ammo){
+  if (!ammo) return '';
+  const aRow = (a, cls) => a ? `<div class="ammo ${cls}">
+      ${a.i ? `<img src="assets/icons/${a.i}" alt="">` : ''}
+      <div class="ai">
+        <div class="an">${a.n}</div>
+        <div class="am"><span class="tag g${a.g}">${a.g}级弹</span><span>×${a.count}发</span></div>
+      </div>
+    </div>` : '';
+  return `<div class="ammobox">${aRow(ammo.main,'main')}${aRow(ammo.sub,'sub')}</div>`;
+}
+
+function renderCard(slot, l){
+  const wrap = el('div', 'card slot' + (slot==='attachments'?' wide':'') + (state.locked[slot]?' locked':''));
+  wrap.dataset.slot = slot;
+  let inner = `<div class="ct">${SLOT_NAMES[slot]}</div>` + cardActions(slot);
+
+  if (slot==='gun' || slot==='second'){
+    const g = slot==='gun' ? l.gun : l.second;
+    const atts = slot==='gun' ? (l.attachments||[]) : (l.secondAtts||[]);
+    const ammo = slot==='gun' ? l.ammo : l.secondAmmo;
+    if (!g){
+      inner += `<div class="empty-slot"><svg><use href="#i-unlock"/></svg><div>未携带副武器（单枪配置）</div><div style="font-size:11px">绝密档约 15% 概率刷出双枪</div></div>`;
+    } else {
+      inner += `<div class="item">
+        <div class="ic">${imgTag(g.i, GUN_ICON_SVG[g.t]||'i-rifle')}</div>
+        <div class="info">
+          <div class="nm">${g.n}</div>
+          <div class="meta"><span class="tag">${g.t}</span><span style="font-size:11px">${g.c||'—'}</span>${slot==='second'?'<span class="tag dual">双枪</span>':''}</div>
+        </div>
+        <div class="price"><b>${R(g.lo, g.hi)}</b><span>交易行区间</span></div>
+      </div>`;
+      if (slot==='second' && atts.length){
+        inner += `<div class="attlist" style="margin-top:10px">` + atts.map(a=>`<div class="attrow">
+          ${a.i?`<img src="assets/icons/${a.i}" alt="">`:''}<span class="an">${a.n}</span><span class="ac">${a.cat}</span><span class="ap">${R(a.lo,a.hi)}</span>
+        </div>`).join('') + `</div>`;
+      }
+      inner += ammoBlock(ammo);
+      if (ammo) inner += `<div style="font-size:10.5px;color:var(--dim);text-align:right;margin-top:6px">弹药不计战备 · 主副弹混装（7:3）</div>`;
+    }
+  }
+  else if (slot==='attachments'){
+    const atts = l.attachments||[];
+    if (!atts.length) inner += `<div class="noatt">未选择改装件</div>`;
+    else {
+      inner += `<div class="attlist">` + atts.map(a=>`<div class="attrow">
+        ${a.i?`<img src="assets/icons/${a.i}" alt="">`:`<svg style="width:16px;height:16px;color:var(--dim)"><use href="#i-mod"/></svg>`}
+        <span class="an">${a.n}</span>
+        <span class="ac">${a.cat}</span>
+        <span class="ap">${R(a.lo, a.hi)}</span>
+      </div>`).join('') + `</div>`;
+      const lo = atts.reduce((s,a)=>s+a.lo,0), hi = atts.reduce((s,a)=>s+a.hi,0);
+      inner += `<div class="sumline">改装合计 <b>${R(lo,hi)}</b> · ${atts.length}件</div>`;
+    }
+  }
+  else if (slot==='helmet'||slot==='armor'){
+    const d = l[slot];
+    if (!d) inner += `<div class="noatt">未选择</div>`;
+    else inner += `<div class="item">
+      <div class="ic">${imgTag(d.i, slot==='helmet'?'i-target':'i-target')}</div>
+      <div class="info">
+        <div class="nm">${d.n}</div>
+        <div class="meta"><span class="tag">${d.g}级</span><span class="tag">${d.wear}</span></div>
+      </div>
+      <div class="price"><b>${R(d.lo, d.hi)}</b><span>交易行区间</span></div>
+    </div>`;
+  }
+  else if (slot==='chest'||slot==='bag'){
+    const d = l[slot];
+    if (!d) inner += `<div class="noatt">未选择</div>`;
+    else inner += `<div class="item">
+      <div class="ic">${imgTag(d.i, 'i-mod')}</div>
+      <div class="info"><div class="nm">${d.n}</div></div>
+      <div class="price"><b>${R(d.lo, d.hi)}</b><span>交易行区间</span></div>
+    </div>`;
+  }
+  else if (slot==='meds'){
+    const ms = l.meds||[];
+    if (!ms.length) inner += `<div class="noatt">未携带医疗品</div>`;
+    else {
+      inner += `<div class="medlist">` + ms.map(m=>`<div class="medrow">
+        ${m.i?`<img src="assets/icons/${m.i}" alt="">`:''}
+        <span class="mk">${m.k||''}</span><span class="mn">${m.n}</span><span class="mp">${R(m.lo,m.hi)}</span>
+      </div>`).join('') + `</div>`;
+      const lo = ms.reduce((s,m)=>s+m.lo,0), hi = ms.reduce((s,m)=>s+m.hi,0);
+      inner += `<div class="sumline">医疗合计 <b>${R(lo,hi)}</b> · 不计战备</div>`;
+    }
+  }
+  wrap.innerHTML = inner;
+  return wrap;
+}
+
+function render(){
+  const grid = $('#grid');
+  const l = state.loadout;
+  if (!l){
+    grid.innerHTML = `<div class="empty-tip" style="grid-column:span 12">
+      <svg><use href="#i-dice"/></svg>
+      <div>选择档位，点击「随机生成战备」开始</div>
+      <div style="font-size:11.5px;margin-top:7px">生成后单件可重掷 / 锁定 · 绝密档有概率刷出双枪 · 弹药支持主副混装</div>
+    </div>`;
+  } else {
+    grid.innerHTML = '';
+    grid.appendChild(renderCard('gun', l));
+    grid.appendChild(renderCard('attachments', l));
+    grid.appendChild(renderCard('second', l));
+    grid.appendChild(renderCard('helmet', l));
+    grid.appendChild(renderCard('armor', l));
+    grid.appendChild(renderCard('chest', l));
+    grid.appendChild(renderCard('bag', l));
+    grid.appendChild(renderCard('meds', l));
+  }
+  renderValueBar();
+}
+
+function renderValueBar(){
+  const l = state.loadout;
+  const totalEl = $('#totalVal'), rowEl = $('#verdictRow'), barEl = $('#valueBar'), conEl = $('#consumableVal');
+  if (!l){
+    totalEl.innerHTML = '—<small>哈夫币</small>';
+    conEl.textContent = '消耗品（弹药+医疗）不计战备：—';
+    rowEl.innerHTML = ''; barEl.innerHTML = '';
+    return;
+  }
+  const wr = calcWarRange(l);
+  const cr = calcConRange(l);
+  const mid = (wr.lo + wr.hi)/2;
+  totalEl.innerHTML = `${W(wr.lo)} - ${W(wr.hi)}<small>哈夫币</small>`;
+  conEl.innerHTML = `消耗品（弹药+医疗）不计战备：<b>≈ ${W(cr.lo)} - ${W(cr.hi)}</b>`;
+
+  // 判定：lo≥门槛 ✓ / lo<门槛≤hi 临界 / 其他 —
+  rowEl.innerHTML = '';
+  for (const t of ALL.thresholds){
+    if (t.value===0) continue;
+    let cls = 'no', mark = '—';
+    if (wr.lo >= t.value){ cls = 'ok'; mark = '✓'; }
+    else if (wr.hi >= t.value){ cls = 'half'; mark = '临界'; }
+    const span = el('span', 'vtag '+cls, `${t.name} ${mark}`);
+    span.title = `${t.maps} · 门槛 ${W(t.value)}`;
+    rowEl.appendChild(span);
+  }
+
+  const MAXV = Math.max(1200000, Math.ceil(wr.hi*1.15/100000)*100000);
+  barEl.innerHTML = '';
+  const fill = el('div','fill'); fill.style.width = clamp(wr.lo/MAXV*100,1,100)+'%';
+  barEl.appendChild(fill);
+  const rng = el('div','rng');
+  rng.style.left = clamp(wr.lo/MAXV*100,1,100)+'%';
+  rng.style.width = clamp((wr.hi-wr.lo)/MAXV*100,0,100)+'%';
+  barEl.appendChild(rng);
+  for (const t of ALL.thresholds){
+    if (t.value===0) continue;
+    const p = clamp(t.value/MAXV*100,0,100);
+    if (p > 99) continue;
+    const mk = el('div','mk'); mk.style.left=p+'%'; barEl.appendChild(mk);
+    const lbl = el('div','mkl'); lbl.style.left=p+'%'; lbl.textContent=W(t.value); barEl.appendChild(lbl);
+  }
+  const cur = el('div','cur'); cur.style.left = clamp(mid/MAXV*100,0.5,99.5)+'%'; barEl.appendChild(cur);
+
+  // 标签防重叠：与前一个标签距离过近时跳过
+  let lastP = -99;
+  const labels = [...barEl.querySelectorAll('.mkl')];
+  for (const lbl of labels){
+    const p = parseFloat(lbl.style.left);
+    if (p - lastP < 9){ lbl.style.display = 'none'; }
+    else { lastP = p; }
+  }
+}
+
+/* ═══════════ 交互 ═══════════ */
+function selectTier(id){
+  state.tierId = id;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on', c.dataset.id===id));
+}
+
+function doGenerate(keepLocks){
+  const fresh = generateAll();
+  if (!fresh){ alert('生成失败：数据池异常'); return; }
+  if (keepLocks && state.loadout){
+    const merged = {...fresh};
+    for (const s of ['gun','attachments','second','secondAtts','secondAmmo','ammo','helmet','armor','chest','bag','meds']){
+      if (state.locked[s] && state.loadout[s] !== undefined) merged[s] = state.loadout[s];
+    }
+    state.loadout = merged;
+  } else {
+    state.loadout = fresh;
+  }
+  render();
+  document.querySelectorAll('.card').forEach(c=>{ c.classList.add('flash'); setTimeout(()=>c.classList.remove('flash'),620); });
+}
+
+function rerollSlot(slot){
+  if (!state.loadout) return;
+  const fresh = generateAll();
+  if (!fresh) return;
+  if (slot==='gun'){
+    // 换主枪时联动重掷改装+弹药（口径变化）
+    state.loadout.gun = fresh.gun;
+    state.loadout.attachments = fresh.attachments;
+    state.loadout.ammo = fresh.ammo;
+    delete state.locked['attachments']; delete state.locked['ammo'];
+  } else if (slot==='second'){
+    state.loadout.second = fresh.second;
+    state.loadout.secondAtts = fresh.secondAtts;
+    state.loadout.secondAmmo = fresh.secondAmmo;
+  } else {
+    state.loadout[slot] = fresh[slot];
+  }
+  render();
+  const card = document.querySelector(`.card[data-slot="${slot}"]`);
+  if (card){ card.classList.add('flash'); setTimeout(()=>card.classList.remove('flash'),620); }
+}
+
+function toggleLock(slot){
+  state.locked[slot] = !state.locked[slot];
+  render();
+}
+
+function copyConfig(){
+  const l = state.loadout;
+  if (!l){ alert('先生成一套战备'); return; }
+  const t = ALL.thresholds.find(x=>x.id===state.tierId);
+  const wr = calcWarRange(l), cr = calcConRange(l);
+  const lines = [];
+  lines.push(`⛑ 三角洲行动 · 随机战备 [${t.name}]`);
+  lines.push('─'.repeat(22));
+  lines.push(`🔫 主武器：${l.gun.n}（${R(l.gun.lo,l.gun.hi)}）`);
+  if (l.attachments.length){
+    const alo = l.attachments.reduce((s,a)=>s+a.lo,0), ahi = l.attachments.reduce((s,a)=>s+a.hi,0);
+    lines.push(`🔧 改装（${l.attachments.length}件 / ${R(alo,ahi)}）：`);
+    for (const a of l.attachments) lines.push(`   · ${a.n}（${R(a.lo,a.hi)}）`);
+  }
+  if (l.ammo){
+    const am = [l.ammo.main, l.ammo.sub].filter(Boolean).map(a=>`${a.n} ×${a.count}发[${a.g}级]`).join(' + ');
+    lines.push(`🧨 弹药：${am}`);
+  }
+  if (l.second){
+    lines.push(`🔫 副武器：${l.second.n}（${R(l.second.lo,l.second.hi)}）`);
+    for (const a of (l.secondAtts||[])) lines.push(`   · ${a.n}（${R(a.lo,a.hi)}）`);
+    if (l.secondAmmo){
+      const sa = [l.secondAmmo.main, l.secondAmmo.sub].filter(Boolean).map(a=>`${a.n} ×${a.count}发[${a.g}级]`).join(' + ');
+      lines.push(`   · 弹药 ${sa}`);
+    }
+  }
+  if (l.helmet) lines.push(`🪖 头盔：${l.helmet.n}【${l.helmet.g}级/${l.helmet.wear}】（${R(l.helmet.lo,l.helmet.hi)}）`);
+  if (l.armor) lines.push(`🦺 护甲：${l.armor.n}【${l.armor.g}级/${l.armor.wear}】（${R(l.armor.lo,l.armor.hi)}）`);
+  if (l.chest) lines.push(`🎽 胸挂：${l.chest.n}（${R(l.chest.lo,l.chest.hi)}）`);
+  if (l.bag) lines.push(`🎒 背包：${l.bag.n}（${R(l.bag.lo,l.bag.hi)}）`);
+  if (l.meds.length) lines.push(`💊 医疗：${l.meds.map(m=>`${m.n}`).join('、')}`);
+  lines.push('─'.repeat(22));
+  lines.push(`🛡 战备价值（装备计入）：≈ ${W(wr.lo)} - ${W(wr.hi)} 哈夫币`);
+  lines.push(`🎒 消耗品（弹药+医疗，不计战备）：≈ ${W(cr.lo)} - ${W(cr.hi)}`);
+  const okList = ALL.thresholds.filter(x=>x.value>0 && wr.lo>=x.value).map(x=>x.name);
+  lines.push(`📍 可达（保守值）：${okList.length?okList.join('、'):'未达机密线'}`);
+  lines.push(`（交易行区间参考价 · 战备值以游戏内实际显示为准）`);
+  const text = lines.join('\n');
+
+  const done = () => { const b=$('#copyBtn'); const o=b.textContent; b.textContent='已复制 ✓'; setTimeout(()=>b.textContent=o,1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else fallbackCopy(text,done);
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){ alert(text); }
+  document.body.removeChild(ta);
+}
+
+/* ═══════════ 初始化 ═══════════ */
+function init(){
+  const row = $('#chipRow');
+  for (const t of ALL.thresholds){
+    const c = el('div','chip'+(t.id===state.tierId?' on':''));
+    c.dataset.id = t.id;
+    const seg = TIER_SEGMENTS[t.id];
+    const rangeTxt = seg ? `${W(seg[0][0])}–${W(seg[seg.length-1][1])}` : '';
+    c.innerHTML = `<b>${t.name}</b><small>${t.value?W(t.value)+' 门槛 · 配装 '+rangeTxt:'无门槛'} · ${t.maps.split('·')[0].trim()}</small>`;
+    c.onclick = ()=>{ selectTier(t.id); };
+    row.appendChild(c);
+  }
+  $('#genBtn').onclick = ()=>doGenerate(true);
+  $('#regenBtn').onclick = ()=>doGenerate(true);
+  $('#copyBtn').onclick = copyConfig;
+  $('#infoBtn').onclick = ()=>$('#infoModal').classList.add('show');
+  $('#infoModal').onclick = e => { if (e.target===e.currentTarget) e.currentTarget.classList.remove('show'); };
+  render();
+}
+init();
+</script>
+</body>
+</html>
