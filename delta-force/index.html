@@ -700,18 +700,20 @@ function imgTag(i, fallbackSvg){
   if (i) return `<img src="assets/icons/${i}" alt="" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='block')"><svg style="display:none"><use href="#${fallbackSvg}"/></svg>`;
   return `<svg><use href="#${fallbackSvg}"/></svg>`;
 }
-/* 图标自愈：渲染后延时检查，未完成/失败的图片重设 src 重新请求（弱网下部分请求可能挂起） */
+/* 图标自愈：渲染后延时检查，未完成/失败的图片以破缓存方式重新请求（弱网下部分请求可能挂起） */
 let iconTimers = [];
 function scheduleIconCheck(){
   iconTimers.forEach(t=>clearTimeout(t)); iconTimers = [];
   iconTimers.push(setTimeout(()=>retryIcons(), 3000));
   iconTimers.push(setTimeout(()=>retryIcons(), 9000));
+  iconTimers.push(setTimeout(()=>retryIcons(), 20000));
 }
 function retryIcons(){
   document.querySelectorAll('.card img').forEach(img => {
     if (!img.complete || img.naturalWidth === 0){
-      const s = img.getAttribute('src');
-      if (s){ img.style.display = ''; img.src = ''; img.src = s; }
+      const s = img.getAttribute('src') || '';
+      const base = s.split('?')[0];
+      if (base){ img.style.display = ''; img.src = base + '?_r=' + Date.now(); }
     }
   });
 }
