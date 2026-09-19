@@ -333,10 +333,11 @@
     <h2>数据说明与使用须知</h2>
     <h3>数据来源</h3>
     <ul>
-      <li><b>价格</b>：交易行多时点聚合区间（3日/7日/30日行情 + 快照），来源 orzice.com（三角洲小涛查），2026-09-18。</li>
+      <li><b>价格</b>：交易行多时点聚合区间（3日/7日/30日行情 + 快照），来源 orzice.com（三角洲小涛查），2026-09-18～19。</li>
       <li><b>图标</b>：游戏官方图库（playerhub.df.qq.com / orzice.com），本地缓存于 assets/icons/。</li>
-      <li><b>战备门槛</b>：各地图入场战备值要求，来源 orzice.com 卡战备系统（2026-09-18 实时）。</li>
-      <li><b>弹药穿透等级</b>：游戏内 1–5 级体系，按口径收录 92 种弹药。</li>
+      <li><b>战备门槛</b>：各地图入场战备值要求，来源 orzice.com 卡战备系统（2026-09-19 实时）。</li>
+      <li><b>弹药穿透等级</b>：游戏内 1–5 级体系，收录 <b>99 种</b>弹药（含本赛季新增 10 种；上赛季 3 种已下架移除）。</li>
+      <li><b>赛季更新</b>：本赛季新增弹药（特勤处渠道）暂无交易行价，已在数据中收录但<b>不参与随机生成</b>；上赛季已下架弹药（M80 / PBP / BP）已从库中移除。</li>
     </ul>
     <h3>数值口径（重要）</h3>
     <ul>
@@ -399,7 +400,10 @@ const GUN_POOL = ALL.guns.filter(g => !EXCLUDED_GUNS.has(g.n));
 const TYPE_WEIGHT = {'步枪':35,'冲锋枪':22,'精确射手步枪':12,'狙击步枪':10,'轻机枪':8,'霰弹枪':8,'手枪':5};
 
 const AMMO_BY_CAL = {};
-for (const a of ALL.ammo) { (AMMO_BY_CAL[a.c] = AMMO_BY_CAL[a.c] || []).push(a); }
+for (const a of ALL.ammo) {
+  if (a.lo <= 0) continue;   // 无交易行价弹（本赛季特勤处渠道弹）不参与随机
+  (AMMO_BY_CAL[a.c] = AMMO_BY_CAL[a.c] || []).push(a);
+}
 
 /* 携弹量按枪型（步枪约220发不含弹内 · 精确射手-10~20% · 冲锋枪+10~20% · 手枪已上调） */
 const AMMO_COUNT_BY_TYPE = {
@@ -551,6 +555,11 @@ function pickAttachments(gun, prof, maxN){
     if (spCats.length && Math.random() < 0.75) cat = pick(spCats);
     else cat = pick(availOk);
     addCat(cat);
+  }
+  // ③ 特殊互斥修正（游戏机制）：Vector「堡垒重枪管」与前握把冲突
+  if (gun.n === 'Vector冲锋枪' && result.some(a=>a.n.includes('堡垒重枪管'))){
+    const idx = result.findIndex(a=>a.cat==='前握把');
+    if (idx >= 0) result.splice(idx, 1);
   }
   return result;
 }
