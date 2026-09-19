@@ -352,7 +352,7 @@
       <li>弹药品级与主武器口径自动匹配，<b>携弹量按枪型区分</b>（数值为备弹数，不含弹匣内已装），支持<b>主副混装</b>（主 70% + 副补 30%，副弹等级略低）。</li>
       <li>改装必含瞄具；配件优先该枪专属（414 件专属映射 + 跨枪通用件库）。</li>
       <li>锁定与重掷：锁定的武器组（含其改装与弹药）保持绑定；单独重掷改装时基于<b>当前武器</b>重选配件，不会与枪错配。</li>
-      <li>医疗标配：CAT止血带 + 止痛类 + 手术类 + 回复类 各一件。</li>
+      <li>医疗标配：CAT止血带 + 止痛类 + 手术类 + 回血类 各一件（等级随战备档位提升）。</li>
       <li><b>双枪机制</b>：绝密档约 15% 概率刷出第二把武器（200万以上目标为达成价值，提升至 40%），附基础改装与弹药。</li>
       <li>装备规则：头/甲 <b>最高 5 级</b>（不用 6 级红品）；不使用金品胸挂（禁交易）；背包排除顶级型号。</li>
       <li>AWM、M82、复合弓因专用弹药价格未收录，暂不参与随机。</li>
@@ -467,7 +467,7 @@ function tierProfile(){
     helmGrades: normal ? [1,2] : V<=110000 ? [2,3,4,5] : V<=180000 ? [3,4,5] : [4,5],
     armorGrades: normal ? [1,2] : V<=110000 ? [2,3,4,5] : V<=180000 ? [3,4,5] : [4,5],
     dualChance: isSecretTier ? (premium ? 0.40 : 0.15) : 0,
-    medCap: V<=110000 ? 8000 : V<=180000 ? 16000 : 220000,
+    medCap: V<=110000 ? 8000 : V<=180000 ? 40000 : 220000,
   };
 }
 
@@ -613,17 +613,27 @@ function pickGear(list, prof, key, maxPrice){
   return cand ? {n:cand.n, lo:cand.lo, hi:cand.hi, i:cand.i} : null;
 }
 
-/* 医疗标配：CAT止血带 + 止痛 + 手术 + 回复 各1 */
+/* 医疗标配：CAT止血带 + 止痛 + 手术 + 回血 各1 */
+/* 医疗分级选择：低档全池 / 中档剔最便宜25% / 高档取价格上40% —— 医疗等级随档位提升 */
 function pickMeds(prof){
   const meds = ALL.consumables;
   const cap = prof.medCap;
   const result = [];
+  const tierRank = prof.V >= 550000 ? 2 : (prof.V >= 180000 ? 1 : 0);
   const cat = meds.find(m => m.n === 'CAT止血带');
   if (cat) result.push({n:cat.n, lo:cat.lo, hi:cat.hi, i:cat.i, k:'止血'});
-  for (const k of ['止痛','手术','回复']){
+  for (const k of ['止痛','手术','回血']){
     let pool = meds.filter(m => m.k===k && midOf(m)<=cap);
     if (!pool.length) pool = meds.filter(m => m.k===k);
-    if (pool.length){ const m = pick(pool); result.push({n:m.n, lo:m.lo, hi:m.hi, i:m.i, k}); }
+    if (!pool.length) continue;
+    const sorted = [...pool].sort((a,b)=>midOf(a)-midOf(b));
+    let slice;
+    if (tierRank >= 2) slice = sorted.slice(Math.min(sorted.length-1, Math.ceil(sorted.length*0.6)));
+    else if (tierRank === 1) slice = sorted.slice(Math.ceil(sorted.length*0.25));
+    else slice = sorted;
+    if (!slice.length) slice = sorted;
+    const m = pick(slice);
+    result.push({n:m.n, lo:m.lo, hi:m.hi, i:m.i, k});
   }
   return result;
 }
